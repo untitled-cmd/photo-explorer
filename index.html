@@ -54,10 +54,14 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif}
 
 .thumb-cell{position:relative;background:#1a1a1a;overflow:hidden;cursor:pointer;aspect-ratio:1}
 .thumb-cell img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .15s}
-.thumb-cell:hover img{opacity:.82}
+.thumb-cell video{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.thumb-cell:hover img,.thumb-cell:hover video{opacity:.82}
 .thumb-cell:focus-visible{outline:2px solid #60a5fa;outline-offset:1px}
 .thumb-cell .name-overlay{position:absolute;inset:0;background:rgba(0,0,0,.55);opacity:0;transition:opacity .15s;display:flex;align-items:flex-end;padding:6px}
 .thumb-cell:hover .name-overlay{opacity:1}
+/* Video play badge */
+.thumb-cell .vid-badge{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.55);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;pointer-events:none;transition:opacity .15s}
+.thumb-cell:hover .vid-badge{opacity:0}
 
 .folder-cell{position:relative;background:#1e1e1e;border:1px solid #2a2a2a;overflow:hidden;cursor:pointer;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;transition:background .12s,border-color .12s}
 .folder-cell:hover{background:#252525;border-color:#3b82f6}
@@ -71,6 +75,8 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif}
 #lightbox{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.96);display:none;align-items:center;justify-content:center}
 #lightbox.open{display:flex}
 #lb-img{max-width:92vw;max-height:90vh;object-fit:contain;user-select:none;transition:opacity .12s}
+#lb-video{max-width:92vw;max-height:90vh;object-fit:contain;display:none;outline:none;background:#000}
+#lb-video.active{display:block}
 #lb-nav-prev,#lb-nav-next{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.1);border:none;color:#fff;font-size:2rem;padding:12px 18px;cursor:pointer;border-radius:4px;transition:background .15s}
 #lb-nav-prev:hover,#lb-nav-next:hover{background:rgba(255,255,255,.25)}
 #lb-nav-prev{left:12px}#lb-nav-next{right:12px}
@@ -149,7 +155,7 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif}
       </div>
       <span class="bg-blue-600 text-white text-sm font-medium px-5 py-2 rounded">Choose Folder</span>
     </div>
-    <p class="text-xs text-gray-600">JPEG · PNG · GIF · WebP · AVIF · BMP · SVG</p>
+    <p class="text-xs text-gray-600">JPEG · PNG · GIF · WebP · AVIF · BMP · SVG · MP4 · MOV · WebM · MKV</p>
   </div>
   <div id="grid-spacer" style="display:none"><div id="grid-window"></div></div>
 </main>
@@ -157,7 +163,7 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif}
 <!-- STATUS -->
 <footer class="flex-none flex items-center gap-4 px-4 py-1 bg-zinc-900 border-t border-zinc-700 text-xs text-gray-500">
   <span id="status">Ready — open a folder to begin.</span>
-  <span class="ml-auto">← → photos · Backspace = up · Esc = close</span>
+  <span class="ml-auto">← → navigate · Backspace = up · Esc = close</span>
 </footer>
 
 <!-- LIGHTBOX -->
@@ -165,6 +171,7 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif}
   <button id="lb-close" aria-label="Close">×</button>
   <button id="lb-nav-prev">&#8249;</button>
   <img id="lb-img" src="" alt="">
+  <video id="lb-video" controls playsinline></video>
   <button id="lb-nav-next">&#8250;</button>
   <div id="lb-info">
     <span id="lb-filename"></span>
@@ -192,6 +199,8 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif}
 //  CONSTANTS
 // ─────────────────────────────────────────
 const IMAGE_EXTS   = new Set(['jpg','jpeg','png','gif','webp','avif','bmp','svg','tiff','tif','ico']);
+const VIDEO_EXTS   = new Set(['mp4','mov','webm','mkv','avi','m4v','ogv','3gp','wmv','flv']);
+const MEDIA_EXTS   = new Set([...IMAGE_EXTS, ...VIDEO_EXTS]);
 const SESSION_KEY  = 'modngaan_session';
 const SESSION_TTL  = 3 * 60 * 60 * 1000; // 3 hours in ms
 const FSAPI        = !!window.showDirectoryPicker; // Chrome/Edge
@@ -231,6 +240,7 @@ const breadcrumb  = document.getElementById('breadcrumb');
 const btnUp       = document.getElementById('btn-up');
 const lightbox    = document.getElementById('lightbox');
 const lbImg       = document.getElementById('lb-img');
+const lbVideo     = document.getElementById('lb-video');
 const lbFilename  = document.getElementById('lb-filename');
 const lbPosition  = document.getElementById('lb-position');
 const lbMeta      = document.getElementById('lb-meta');
@@ -286,14 +296,16 @@ async function loadFSAPI(dirHandle) {
       folders.push({ type:'folder', name:entry.name, handle:entry, count:null });
     } else {
       const ext = entry.name.split('.').pop().toLowerCase();
-      if (IMAGE_EXTS.has(ext))
-        files.push({ type:'file', name:entry.name, handle:entry, size:0, lastModified:0 });
+      if (MEDIA_EXTS.has(ext)) {
+        const mediaType = VIDEO_EXTS.has(ext) ? 'video' : 'image';
+        files.push({ type:'file', name:entry.name, handle:entry, size:0, lastModified:0, mediaType });
+      }
     }
   }
 
   // Show folder tiles immediately (no metadata needed)
   buildDisplay(folders, []);
-  if (files.length) statusEl.textContent = `Loading ${files.length.toLocaleString()} photos…`;
+  if (files.length) statusEl.textContent = `Loading ${files.length.toLocaleString()} files…`;
 
   // Resolve metadata in batches — progressive render
   for (let i=0; i<files.length; i+=META_BATCH) {
@@ -327,8 +339,10 @@ function renderFallback(allFiles, depth) {
     const parts = f.webkitRelativePath.split('/');
     if (parts.length === depth+1) {
       const ext = f.name.split('.').pop().toLowerCase();
-      if (IMAGE_EXTS.has(ext))
-        dirFiles.push({ type:'file', name:f.name, handle:f, size:f.size, lastModified:f.lastModified });
+      if (MEDIA_EXTS.has(ext)) {
+        const mediaType = VIDEO_EXTS.has(ext) ? 'video' : 'image';
+        dirFiles.push({ type:'file', name:f.name, handle:f, size:f.size, lastModified:f.lastModified, mediaType });
+      }
     } else if (parts.length > depth+1) {
       const sub = parts[depth];
       if (!subMap.has(sub)) subMap.set(sub,[]);
@@ -372,10 +386,16 @@ function buildDisplay(folders, files) {
   dispIdxMap.clear();
   displayItems.forEach((item,i)=>dispIdxMap.set(item,i));
 
+  const photoCount = filt.filter(f=>f.mediaType==='image').length;
+  const videoCount = filt.filter(f=>f.mediaType==='video').length;
+  const mediaParts = [];
+  if (photoCount) mediaParts.push(`${photoCount} photo${photoCount!==1?'s':''}`);
+  if (videoCount) mediaParts.push(`${videoCount} video${videoCount!==1?'s':''}`);
+  const mediaStr = mediaParts.join(' · ') || '0 items';
   searchCount.textContent = q ? filt.length.toLocaleString() : '';
   statsEl.textContent = folders.length
-    ? `${folders.length} folder${folders.length!==1?'s':''} · ${filt.length} photo${filt.length!==1?'s':''}`
-    : `${filt.length} photo${filt.length!==1?'s':''}`;
+    ? `${folders.length} folder${folders.length!==1?'s':''} · ${mediaStr}`
+    : mediaStr;
   statusEl.textContent = `${displayItems.length} item${displayItems.length!==1?'s':''}`;
 
   updateBreadcrumb();
@@ -585,8 +605,15 @@ function renderPhotoCell(cell, item, idx) {
   const ov=document.createElement('div'); ov.className='name-overlay';
   const sp=document.createElement('span'); sp.className='text-white text-xs truncate w-full'; sp.textContent=item.name;
   ov.appendChild(sp); cell.appendChild(ov);
+
+  // Video play badge
+  if (item.mediaType==='video') {
+    const badge=document.createElement('div'); badge.className='vid-badge';
+    badge.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>';
+    cell.appendChild(badge);
+  }
+
   const click=()=>{
-    // Use cached photoItems + dispIdxMap — O(1)
     const pi=photoItems.indexOf(item);
     if(pi!==-1) openLightbox(pi);
   };
@@ -602,11 +629,21 @@ async function loadThumb(cell, item, idx) {
     url=URL.createObjectURL(f); objectURLs.set(idx,url);
   }
   if (cell.dataset.idx!==String(idx)) return;
-  const img=document.createElement('img');
-  img.src=url; img.alt=item.name; img.decoding='async'; img.loading='lazy';
-  img.addEventListener('load', ()=>{ if(cell.dataset.idx===String(idx)) cell.classList.remove('skeleton'); });
-  img.addEventListener('error', ()=>cell.classList.remove('skeleton'));
-  cell.insertBefore(img,cell.firstChild);
+
+  if (item.mediaType==='video') {
+    // Use <video> with muted+preload to render first frame as thumbnail
+    const vid=document.createElement('video');
+    vid.src=url; vid.muted=true; vid.preload='metadata'; vid.playsInline=true;
+    vid.addEventListener('loadeddata', ()=>{ if(cell.dataset.idx===String(idx)) cell.classList.remove('skeleton'); });
+    vid.addEventListener('error', ()=>cell.classList.remove('skeleton'));
+    cell.insertBefore(vid,cell.firstChild);
+  } else {
+    const img=document.createElement('img');
+    img.src=url; img.alt=item.name; img.decoding='async'; img.loading='lazy';
+    img.addEventListener('load', ()=>{ if(cell.dataset.idx===String(idx)) cell.classList.remove('skeleton'); });
+    img.addEventListener('error', ()=>cell.classList.remove('skeleton'));
+    cell.insertBefore(img,cell.firstChild);
+  }
 }
 
 async function getBlob(item) {
@@ -636,18 +673,34 @@ async function openLightbox(photoIdx) {
 async function showLbPhoto(idx) {
   lbIndex=idx;
   const item=photoItems[idx]; if(!item) return;
-  lbImg.style.opacity='0'; lbImg.src='';
   const di=dispIdxMap.get(item)??-1;
   let url=di>=0?objectURLs.get(di):null;
   if (!url) {
     const f=await getBlob(item); if(!f) return;
     url=URL.createObjectURL(f); if(di>=0) objectURLs.set(di,url);
   }
-  lbImg.onload=()=>lbImg.style.opacity='1';
-  lbImg.src=url; lbImg.alt=item.name;
+
+  const isVideo = item.mediaType==='video';
+
+  // Toggle img / video visibility
+  lbImg.style.display   = isVideo ? 'none' : '';
+  lbImg.style.opacity   = '0';
+  lbVideo.classList.toggle('active', isVideo);
+
+  if (isVideo) {
+    lbVideo.pause();
+    lbVideo.src=url; lbVideo.load();
+    lbVideo.oncanplay=()=>{ lbVideo.oncanplay=null; };
+  } else {
+    lbVideo.pause(); lbVideo.src='';
+    lbImg.onload=()=>lbImg.style.opacity='1';
+    lbImg.src=url; lbImg.alt=item.name;
+  }
+
+  const ext = item.name.split('.').pop().toUpperCase();
   lbFilename.textContent=item.name;
   lbPosition.textContent=`${(idx+1).toLocaleString()} / ${photoItems.length.toLocaleString()}`;
-  lbMeta.textContent=item.size?`${(item.size/1024).toFixed(0)} KB  ${item.lastModified?new Date(item.lastModified).toLocaleDateString():''}`:'' ;
+  lbMeta.textContent=item.size?`${(item.size/1024/1024).toFixed(1)} MB  ${item.lastModified?new Date(item.lastModified).toLocaleDateString():''}  ${ext}`:'';
   preloadAdj(idx);
 }
 
@@ -659,7 +712,12 @@ function preloadAdj(idx) {
   });
 }
 
-function closeLightbox() { lightbox.classList.remove('open'); lbImg.src=''; }
+function closeLightbox() {
+  lightbox.classList.remove('open');
+  lbImg.src='';
+  lbVideo.pause(); lbVideo.src=''; lbVideo.classList.remove('active');
+  lbImg.style.display='';
+}
 
 document.getElementById('lb-close').addEventListener('click', closeLightbox);
 document.getElementById('lb-nav-prev').addEventListener('click', ()=>{ if(lbIndex>0) showLbPhoto(lbIndex-1); });
