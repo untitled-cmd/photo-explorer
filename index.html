@@ -62,6 +62,11 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif}
 /* Video play badge */
 .thumb-cell .vid-badge{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.55);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;pointer-events:none;transition:opacity .15s}
 .thumb-cell:hover .vid-badge{opacity:0}
+/* Audio tile */
+.thumb-cell.audio-cell{background:#141a14}
+.thumb-cell .audio-badge{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;pointer-events:none}
+.thumb-cell .audio-badge svg{opacity:.5}
+.thumb-cell .audio-ext{font-size:.6rem;color:#6b7280;letter-spacing:.05em;text-transform:uppercase}
 
 .folder-cell{position:relative;background:#1e1e1e;border:1px solid #2a2a2a;overflow:hidden;cursor:pointer;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;transition:background .12s,border-color .12s}
 .folder-cell:hover{background:#252525;border-color:#3b82f6}
@@ -77,6 +82,11 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif}
 #lb-img{max-width:92vw;max-height:90vh;object-fit:contain;user-select:none;transition:opacity .12s}
 #lb-video{max-width:92vw;max-height:90vh;object-fit:contain;display:none;outline:none;background:#000}
 #lb-video.active{display:block}
+/* Audio player in lightbox */
+#lb-audio-wrap{display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;max-width:480px;width:90vw}
+#lb-audio-wrap.active{display:flex}
+#lb-audio-wrap svg{opacity:.3}
+#lb-audio{width:100%;outline:none;accent-color:#3b82f6}
 #lb-nav-prev,#lb-nav-next{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.1);border:none;color:#fff;font-size:2rem;padding:12px 18px;cursor:pointer;border-radius:4px;transition:background .15s}
 #lb-nav-prev:hover,#lb-nav-next:hover{background:rgba(255,255,255,.25)}
 #lb-nav-prev{left:12px}#lb-nav-next{right:12px}
@@ -155,7 +165,7 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif}
       </div>
       <span class="bg-blue-600 text-white text-sm font-medium px-5 py-2 rounded">Choose Folder</span>
     </div>
-    <p class="text-xs text-gray-600">JPEG · PNG · GIF · WebP · AVIF · BMP · SVG · MP4 · MOV · WebM · MKV</p>
+    <p class="text-xs text-gray-600">JPEG · PNG · GIF · WebP · MP4 · MOV · WebM · MP3 · WAV · FLAC · AAC</p>
   </div>
   <div id="grid-spacer" style="display:none"><div id="grid-window"></div></div>
 </main>
@@ -172,6 +182,12 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif}
   <button id="lb-nav-prev">&#8249;</button>
   <img id="lb-img" src="" alt="">
   <video id="lb-video" controls playsinline></video>
+  <div id="lb-audio-wrap">
+    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1">
+      <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+    </svg>
+    <audio id="lb-audio" controls></audio>
+  </div>
   <button id="lb-nav-next">&#8250;</button>
   <div id="lb-info">
     <span id="lb-filename"></span>
@@ -200,7 +216,8 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif}
 // ─────────────────────────────────────────
 const IMAGE_EXTS   = new Set(['jpg','jpeg','png','gif','webp','avif','bmp','svg','tiff','tif','ico']);
 const VIDEO_EXTS   = new Set(['mp4','mov','webm','mkv','avi','m4v','ogv','3gp','wmv','flv']);
-const MEDIA_EXTS   = new Set([...IMAGE_EXTS, ...VIDEO_EXTS]);
+const AUDIO_EXTS   = new Set(['mp3','wav','flac','aac','ogg','m4a','opus','wma','aiff','aif']);
+const MEDIA_EXTS   = new Set([...IMAGE_EXTS, ...VIDEO_EXTS, ...AUDIO_EXTS]);
 const SESSION_KEY  = 'modngaan_session';
 const SESSION_TTL  = 3 * 60 * 60 * 1000; // 3 hours in ms
 const FSAPI        = !!window.showDirectoryPicker; // Chrome/Edge
@@ -241,6 +258,8 @@ const btnUp       = document.getElementById('btn-up');
 const lightbox    = document.getElementById('lightbox');
 const lbImg       = document.getElementById('lb-img');
 const lbVideo     = document.getElementById('lb-video');
+const lbAudio     = document.getElementById('lb-audio');
+const lbAudioWrap = document.getElementById('lb-audio-wrap');
 const lbFilename  = document.getElementById('lb-filename');
 const lbPosition  = document.getElementById('lb-position');
 const lbMeta      = document.getElementById('lb-meta');
@@ -297,7 +316,7 @@ async function loadFSAPI(dirHandle) {
     } else {
       const ext = entry.name.split('.').pop().toLowerCase();
       if (MEDIA_EXTS.has(ext)) {
-        const mediaType = VIDEO_EXTS.has(ext) ? 'video' : 'image';
+        const mediaType = VIDEO_EXTS.has(ext) ? 'video' : AUDIO_EXTS.has(ext) ? 'audio' : 'image';
         files.push({ type:'file', name:entry.name, handle:entry, size:0, lastModified:0, mediaType });
       }
     }
@@ -340,7 +359,7 @@ function renderFallback(allFiles, depth) {
     if (parts.length === depth+1) {
       const ext = f.name.split('.').pop().toLowerCase();
       if (MEDIA_EXTS.has(ext)) {
-        const mediaType = VIDEO_EXTS.has(ext) ? 'video' : 'image';
+        const mediaType = VIDEO_EXTS.has(ext) ? 'video' : AUDIO_EXTS.has(ext) ? 'audio' : 'image';
         dirFiles.push({ type:'file', name:f.name, handle:f, size:f.size, lastModified:f.lastModified, mediaType });
       }
     } else if (parts.length > depth+1) {
@@ -388,9 +407,11 @@ function buildDisplay(folders, files) {
 
   const photoCount = filt.filter(f=>f.mediaType==='image').length;
   const videoCount = filt.filter(f=>f.mediaType==='video').length;
+  const audioCount = filt.filter(f=>f.mediaType==='audio').length;
   const mediaParts = [];
   if (photoCount) mediaParts.push(`${photoCount} photo${photoCount!==1?'s':''}`);
   if (videoCount) mediaParts.push(`${videoCount} video${videoCount!==1?'s':''}`);
+  if (audioCount) mediaParts.push(`${audioCount} audio`);
   const mediaStr = mediaParts.join(' · ') || '0 items';
   searchCount.textContent = q ? filt.length.toLocaleString() : '';
   statsEl.textContent = folders.length
@@ -613,6 +634,19 @@ function renderPhotoCell(cell, item, idx) {
     cell.appendChild(badge);
   }
 
+  // Audio tile — no thumbnail, just icon + ext label
+  if (item.mediaType==='audio') {
+    cell.classList.add('audio-cell');
+    const ab=document.createElement('div'); ab.className='audio-badge';
+    ab.innerHTML=`<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5">
+      <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+    </svg>`;
+    const ext=document.createElement('span'); ext.className='audio-ext';
+    ext.textContent=item.name.split('.').pop();
+    ab.appendChild(ext); cell.appendChild(ab);
+    cell.classList.remove('skeleton'); // no loading state for audio
+  }
+
   const click=()=>{
     const pi=photoItems.indexOf(item);
     if(pi!==-1) openLightbox(pi);
@@ -623,6 +657,9 @@ function renderPhotoCell(cell, item, idx) {
 }
 
 async function loadThumb(cell, item, idx) {
+  // Audio has no visual thumbnail — tile is already rendered
+  if (item.mediaType==='audio') return;
+
   let url=objectURLs.get(idx);
   if (!url) {
     const f=await getBlob(item); if(!f){cell.classList.remove('skeleton');return;}
@@ -681,17 +718,22 @@ async function showLbPhoto(idx) {
   }
 
   const isVideo = item.mediaType==='video';
+  const isAudio = item.mediaType==='audio';
 
-  // Toggle img / video visibility
-  lbImg.style.display   = isVideo ? 'none' : '';
-  lbImg.style.opacity   = '0';
+  // Toggle img / video / audio visibility
+  lbImg.style.display      = (isVideo||isAudio) ? 'none' : '';
+  lbImg.style.opacity      = '0';
   lbVideo.classList.toggle('active', isVideo);
+  lbAudioWrap.classList.toggle('active', isAudio);
 
-  if (isVideo) {
-    lbVideo.pause();
-    lbVideo.src=url; lbVideo.load();
-    lbVideo.oncanplay=()=>{ lbVideo.oncanplay=null; };
+  if (isAudio) {
+    lbVideo.pause(); lbVideo.src='';
+    lbAudio.pause(); lbAudio.src=url; lbAudio.load();
+  } else if (isVideo) {
+    lbAudio.pause(); lbAudio.src='';
+    lbVideo.pause(); lbVideo.src=url; lbVideo.load();
   } else {
+    lbAudio.pause(); lbAudio.src='';
     lbVideo.pause(); lbVideo.src='';
     lbImg.onload=()=>lbImg.style.opacity='1';
     lbImg.src=url; lbImg.alt=item.name;
@@ -714,9 +756,9 @@ function preloadAdj(idx) {
 
 function closeLightbox() {
   lightbox.classList.remove('open');
-  lbImg.src='';
+  lbImg.src=''; lbImg.style.display='';
   lbVideo.pause(); lbVideo.src=''; lbVideo.classList.remove('active');
-  lbImg.style.display='';
+  lbAudio.pause(); lbAudio.src=''; lbAudioWrap.classList.remove('active');
 }
 
 document.getElementById('lb-close').addEventListener('click', closeLightbox);
