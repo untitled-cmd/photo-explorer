@@ -5,201 +5,99 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mod Ngaan</title>
 <style>
-/* ── Tailwind utility replacements (only classes actually used) ── */
 *,::before,::after{box-sizing:border-box}
 input,button,select,textarea{font-family:inherit}
 button{cursor:pointer}
 img{display:block;max-width:100%}
 
-/* Layout */
 .flex{display:flex}.flex-col{flex-direction:column}.flex-1{flex:1 1 0%}.flex-none{flex:none}
 .items-center{align-items:center}.justify-center{justify-content:center}
-.gap-1{gap:0.25rem}.gap-1\.5{gap:0.375rem}.gap-2{gap:0.5rem}.gap-4{gap:1rem}.gap-5{gap:1.25rem}
+.gap-1{gap:.25rem}.gap-1\.5{gap:.375rem}.gap-2{gap:.5rem}.gap-4{gap:1rem}.gap-5{gap:1.25rem}
 .relative{position:relative}.absolute{position:absolute}
 .top-1\/2{top:50%}.-translate-y-1\/2{transform:translateY(-50%)}
-.right-2{right:0.5rem}.mt-1{margin-top:0.25rem}.ml-auto{margin-left:auto}
+.right-2{right:.5rem}.mt-1{margin-top:.25rem}.ml-auto{margin-left:auto}
 .min-w-0{min-width:0}.w-full{width:100%}.h-full{height:100%}.h-screen{height:100vh}
-.w-3{width:0.75rem}.h-3{height:0.75rem}
-.w-3\.5{width:0.875rem}.h-3\.5{height:0.875rem}
-.w-4{width:1rem}.h-4{height:1rem}
-.w-14{width:3.5rem}.h-14{height:3.5rem}
-.w-20{width:5rem}.w-36{width:9rem}
-.overflow-hidden{overflow:hidden}
+.w-3{width:.75rem}.h-3{height:.75rem}.w-3\.5{width:.875rem}.h-3\.5{height:.875rem}
+.w-4{width:1rem}.h-4{height:1rem}.w-14{width:3.5rem}.h-14{height:3.5rem}
+.w-20{width:5rem}.w-36{width:9rem}.overflow-hidden{overflow:hidden}
+.px-2{padding-left:.5rem;padding-right:.5rem}.px-2\.5{padding-left:.625rem;padding-right:.625rem}
+.px-3{padding-left:.75rem;padding-right:.75rem}.px-4{padding-left:1rem;padding-right:1rem}
+.px-5{padding-left:1.25rem;padding-right:1.25rem}.px-16{padding-left:4rem;padding-right:4rem}
+.py-1{padding-top:.25rem;padding-bottom:.25rem}.py-1\.5{padding-top:.375rem;padding-bottom:.375rem}
+.py-2{padding-top:.5rem;padding-bottom:.5rem}.py-12{padding-top:3rem;padding-bottom:3rem}
+.text-xs{font-size:.75rem;line-height:1rem}.text-sm{font-size:.875rem;line-height:1.25rem}
+.text-base{font-size:1rem;line-height:1.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}
+.text-center{text-align:center}.font-medium{font-weight:500}.font-semibold{font-weight:600}
+.whitespace-nowrap{white-space:nowrap}.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.text-white{color:#fff}.text-gray-200{color:#e5e7eb}.text-gray-400{color:#9ca3af}
+.text-gray-500{color:#6b7280}.text-gray-600{color:#4b5563}.text-blue-300{color:#93c5fd}
+.bg-black{background-color:#000}.bg-blue-600{background-color:#2563eb}
+.bg-zinc-700{background-color:#3f3f46}.bg-zinc-800{background-color:#27272a}.bg-zinc-900{background-color:#18181b}
+.border{border-width:1px;border-style:solid}.border-2{border-width:2px;border-style:solid}
+.border-b{border-bottom-width:1px;border-bottom-style:solid}.border-t{border-top-width:1px;border-top-style:solid}
+.border-dashed{border-style:dashed}.border-zinc-600{border-color:#52525b}.border-zinc-700{border-color:#3f3f46}
+.rounded{border-radius:.25rem}.rounded-xl{border-radius:.75rem}
+.opacity-30{opacity:.3}.opacity-50{opacity:.5}.cursor-pointer{cursor:pointer}
+.hover\:bg-blue-500:hover{background-color:#3b82f6}.hover\:bg-zinc-600:hover{background-color:#52525b}
+.hover\:bg-zinc-900:hover{background-color:#18181b}.hover\:border-blue-500:hover{border-color:#3b82f6}
+.focus\:outline-none:focus{outline:none}.focus\:ring-2:focus{box-shadow:0 0 0 2px rgba(96,165,250,.5)}
+.focus\:ring-blue-400:focus{box-shadow:0 0 0 2px #60a5fa}.focus\:border-blue-500:focus{border-color:#3b82f6}
+.disabled\:opacity-30:disabled{opacity:.3}.disabled\:cursor-not-allowed:disabled{cursor:not-allowed}
+.placeholder-gray-500::placeholder{color:#6b7280}.accent-blue-500{accent-color:#3b82f6}
+.transition-colors{transition:color .15s,background-color .15s,border-color .15s}
 
-/* Spacing */
-.px-2{padding-left:0.5rem;padding-right:0.5rem}
-.px-2\.5{padding-left:0.625rem;padding-right:0.625rem}
-.px-3{padding-left:0.75rem;padding-right:0.75rem}
-.px-4{padding-left:1rem;padding-right:1rem}
-.px-5{padding-left:1.25rem;padding-right:1.25rem}
-.px-16{padding-left:4rem;padding-right:4rem}
-.py-1{padding-top:0.25rem;padding-bottom:0.25rem}
-.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}
-.py-2{padding-top:0.5rem;padding-bottom:0.5rem}
-.py-12{padding-top:3rem;padding-bottom:3rem}
+/* App */
+body{font-family:'Segoe UI','Noto Sans Thai',sans-serif}
+#grid-viewport{overflow-y:auto;will-change:scroll-position;contain:strict}
+#grid-spacer{position:relative;width:100%}
+#grid-window{position:absolute;top:0;left:0;right:0}
 
-/* Typography */
-.text-xs{font-size:0.75rem;line-height:1rem}
-.text-sm{font-size:0.875rem;line-height:1.25rem}
-.text-base{font-size:1rem;line-height:1.5rem}
-.text-lg{font-size:1.125rem;line-height:1.75rem}
-.text-center{text-align:center}
-.font-medium{font-weight:500}.font-semibold{font-weight:600}
-.whitespace-nowrap{white-space:nowrap}
-.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.w-full.truncate{max-width:100%}
+.thumb-cell{position:relative;background:#1a1a1a;overflow:hidden;cursor:pointer;aspect-ratio:1}
+.thumb-cell img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .15s}
+.thumb-cell:hover img{opacity:.82}
+.thumb-cell:focus-visible{outline:2px solid #60a5fa;outline-offset:1px}
+.thumb-cell .name-overlay{position:absolute;inset:0;background:rgba(0,0,0,.55);opacity:0;transition:opacity .15s;display:flex;align-items:flex-end;padding:6px}
+.thumb-cell:hover .name-overlay{opacity:1}
 
-/* Colors — text */
-.text-white{color:#fff}
-.text-gray-200{color:#e5e7eb}.text-gray-400{color:#9ca3af}
-.text-gray-500{color:#6b7280}.text-gray-600{color:#4b5563}
-.text-blue-300{color:#93c5fd}
+.folder-cell{position:relative;background:#1e1e1e;border:1px solid #2a2a2a;overflow:hidden;cursor:pointer;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;transition:background .12s,border-color .12s}
+.folder-cell:hover{background:#252525;border-color:#3b82f6}
+.folder-cell:focus-visible{outline:2px solid #60a5fa;outline-offset:1px}
+.folder-cell .f-name{font-size:.7rem;color:#ccc;text-align:center;padding:0 6px;overflow:hidden;word-break:break-all;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.folder-cell .f-count{font-size:.65rem;color:#555}
 
-/* Colors — background */
-.bg-black{background-color:#000}
-.bg-blue-600{background-color:#2563eb}
-.bg-zinc-700{background-color:#3f3f46}
-.bg-zinc-800{background-color:#27272a}
-.bg-zinc-900{background-color:#18181b}
+.skeleton{background:linear-gradient(90deg,#222 25%,#2e2e2e 50%,#222 75%);background-size:200% 100%;animation:shimmer 1.2s infinite}
+@keyframes shimmer{to{background-position:-200% 0}}
 
-/* Colors — border */
-.border{border-width:1px;border-style:solid}
-.border-2{border-width:2px;border-style:solid}
-.border-b{border-bottom-width:1px;border-bottom-style:solid}
-.border-t{border-top-width:1px;border-top-style:solid}
-.border-dashed{border-style:dashed}
-.border-zinc-600{border-color:#52525b}
-.border-zinc-700{border-color:#3f3f46}
+#lightbox{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.96);display:none;align-items:center;justify-content:center}
+#lightbox.open{display:flex}
+#lb-img{max-width:92vw;max-height:90vh;object-fit:contain;user-select:none;transition:opacity .12s}
+#lb-nav-prev,#lb-nav-next{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.1);border:none;color:#fff;font-size:2rem;padding:12px 18px;cursor:pointer;border-radius:4px;transition:background .15s}
+#lb-nav-prev:hover,#lb-nav-next:hover{background:rgba(255,255,255,.25)}
+#lb-nav-prev{left:12px}#lb-nav-next{right:12px}
+#lb-close{position:absolute;top:12px;right:16px;background:none;border:none;color:#fff;font-size:1.75rem;cursor:pointer;line-height:1}
+#lb-info{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.7);color:#ccc;padding:10px 16px;font-size:.8rem;display:flex;justify-content:space-between;align-items:center}
 
-/* Rounded */
-.rounded{border-radius:0.25rem}.rounded-xl{border-radius:0.75rem}
+#breadcrumb{display:flex;align-items:center;gap:2px;min-width:0;flex:1;overflow:hidden;flex-wrap:nowrap}
+.bc-item{color:#60a5fa;cursor:pointer;font-size:.8rem;padding:1px 4px;border-radius:3px;transition:background .1s;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis;flex-shrink:1}
+.bc-item:hover{background:rgba(96,165,250,.15)}
+.bc-item.active{color:#e4e4e7;cursor:default;pointer-events:none}
+.bc-sep{color:#444;font-size:.75rem;flex-shrink:0}
 
-/* Misc */
-.opacity-30{opacity:0.3}.opacity-50{opacity:0.5}
-.cursor-pointer{cursor:pointer}
+#drop-overlay{display:none;position:fixed;inset:0;z-index:40;background:rgba(59,130,246,.12);border:3px dashed #3b82f6;pointer-events:none;align-items:center;justify-content:center}
+#drop-overlay.show{display:flex}
 
-/* Hover states */
-.hover\:bg-blue-500:hover{background-color:#3b82f6}
-.hover\:bg-zinc-600:hover{background-color:#52525b}
-.hover\:bg-zinc-900:hover{background-color:#18181b}
-.hover\:border-blue-500:hover{border-color:#3b82f6}
+#grid-viewport::-webkit-scrollbar{width:6px}
+#grid-viewport::-webkit-scrollbar-track{background:#111}
+#grid-viewport::-webkit-scrollbar-thumb{background:#444;border-radius:3px}
 
-/* Focus states */
-.focus\:outline-none:focus{outline:none}
-.focus\:ring-2:focus{box-shadow:0 0 0 2px rgba(96,165,250,0.5)}
-.focus\:ring-blue-400:focus{box-shadow:0 0 0 2px #60a5fa}
-.focus\:border-blue-500:focus{border-color:#3b82f6}
-
-/* Disabled states */
-.disabled\:opacity-30:disabled{opacity:0.3}
-.disabled\:cursor-not-allowed:disabled{cursor:not-allowed}
-
-/* Placeholder */
-.placeholder-gray-500::placeholder{color:#6b7280}
-
-/* Accent */
-.accent-blue-500{accent-color:#3b82f6}
-
-/* Transition */
-.transition-colors{transition:color 0.15s,background-color 0.15s,border-color 0.15s}
-
-/* ── App-specific styles ── */
-  body { font-family: 'Segoe UI', 'Noto Sans Thai', sans-serif; }
-
-  #grid-viewport { overflow-y: auto; will-change: scroll-position; contain: strict; }
-  #grid-spacer   { position: relative; width: 100%; }
-  #grid-window   { position: absolute; top: 0; left: 0; right: 0; }
-
-  /* Photo tile */
-  .thumb-cell {
-    position: relative; background: #1a1a1a;
-    overflow: hidden; cursor: pointer; aspect-ratio: 1;
-  }
-  .thumb-cell img { width:100%; height:100%; object-fit:cover; display:block; transition:opacity 0.15s; }
-  .thumb-cell:hover img { opacity: 0.82; }
-  .thumb-cell:focus-visible { outline: 2px solid #60a5fa; outline-offset: 1px; }
-  .thumb-cell .name-overlay {
-    position:absolute; inset:0; background:rgba(0,0,0,0.55);
-    opacity:0; transition:opacity 0.15s;
-    display:flex; align-items:flex-end; padding:6px;
-  }
-  .thumb-cell:hover .name-overlay { opacity: 1; }
-
-  /* Folder tile */
-  .folder-cell {
-    position:relative; background:#1e1e1e; border:1px solid #2a2a2a;
-    overflow:hidden; cursor:pointer; aspect-ratio:1;
-    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;
-    transition: background 0.12s, border-color 0.12s;
-  }
-  .folder-cell:hover  { background:#252525; border-color:#3b82f6; }
-  .folder-cell:focus-visible { outline:2px solid #60a5fa; outline-offset:1px; }
-  .folder-cell .f-name {
-    font-size:0.7rem; color:#ccc; text-align:center; padding:0 6px;
-    overflow:hidden; word-break:break-all;
-    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
-  }
-  .folder-cell .f-count { font-size:0.65rem; color:#555; }
-
-  /* Skeleton */
-  .skeleton {
-    background: linear-gradient(90deg,#222 25%,#2e2e2e 50%,#222 75%);
-    background-size:200% 100%; animation:shimmer 1.2s infinite;
-  }
-  @keyframes shimmer { to { background-position:-200% 0; } }
-
-  /* Lightbox */
-  #lightbox {
-    position:fixed; inset:0; z-index:50; background:rgba(0,0,0,0.96);
-    display:none; align-items:center; justify-content:center;
-  }
-  #lightbox.open { display:flex; }
-  #lb-img { max-width:92vw; max-height:90vh; object-fit:contain; user-select:none; transition:opacity 0.12s; }
-  #lb-nav-prev,#lb-nav-next {
-    position:absolute; top:50%; transform:translateY(-50%);
-    background:rgba(255,255,255,0.1); border:none; color:#fff;
-    font-size:2rem; padding:12px 18px; cursor:pointer;
-    border-radius:4px; transition:background 0.15s;
-  }
-  #lb-nav-prev:hover,#lb-nav-next:hover { background:rgba(255,255,255,0.25); }
-  #lb-nav-prev { left:12px; } #lb-nav-next { right:12px; }
-  #lb-close { position:absolute; top:12px; right:16px; background:none; border:none; color:#fff; font-size:1.75rem; cursor:pointer; line-height:1; }
-  #lb-info {
-    position:absolute; bottom:0; left:0; right:0;
-    background:rgba(0,0,0,0.7); color:#ccc; padding:10px 16px; font-size:0.8rem;
-    display:flex; justify-content:space-between; align-items:center;
-  }
-
-  /* Breadcrumb */
-  #breadcrumb { display:flex; align-items:center; gap:2px; min-width:0; flex:1; overflow:hidden; flex-wrap:nowrap; }
-  .bc-item {
-    color:#60a5fa; cursor:pointer; font-size:0.8rem; padding:1px 4px; border-radius:3px;
-    transition:background 0.1s; white-space:nowrap; max-width:160px;
-    overflow:hidden; text-overflow:ellipsis; flex-shrink:1;
-  }
-  .bc-item:hover { background:rgba(96,165,250,0.15); }
-  .bc-item.active { color:#e4e4e7; cursor:default; pointer-events:none; }
-  .bc-sep { color:#444; font-size:0.75rem; flex-shrink:0; }
-
-  /* Drop overlay */
-  #drop-overlay {
-    display:none; position:fixed; inset:0; z-index:40;
-    background:rgba(59,130,246,0.12); border:3px dashed #3b82f6;
-    pointer-events:none; align-items:center; justify-content:center;
-  }
-  #drop-overlay.show { display:flex; }
-
-  /* Scrollbar */
-  #grid-viewport::-webkit-scrollbar { width:6px; }
-  #grid-viewport::-webkit-scrollbar-track { background:#111; }
-  #grid-viewport::-webkit-scrollbar-thumb { background:#444; border-radius:3px; }
+#resume-banner{display:none;position:fixed;bottom:2.5rem;left:50%;transform:translateX(-50%);z-index:30;background:#1e3a5f;border:1px solid #2563eb;border-radius:8px;padding:10px 16px;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,.5);white-space:nowrap}
+#resume-banner.show{display:flex}
 </style>
 </head>
 <body class="bg-black text-gray-200 h-screen flex flex-col overflow-hidden">
 
 <!-- TOOLBAR -->
 <header class="flex-none flex items-center gap-2 px-3 py-2 bg-zinc-900 border-b border-zinc-700 min-w-0">
-
   <button id="btn-open"
     class="flex-none flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-3 py-1.5 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
     title="Open folder (Ctrl+O)">
@@ -207,7 +105,6 @@ img{display:block;max-width:100%}
       <path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
     </svg>Open
   </button>
-
   <button id="btn-up"
     class="flex-none flex items-center gap-1 bg-zinc-700 hover:bg-zinc-600 text-sm px-2.5 py-1.5 rounded disabled:opacity-30 disabled:cursor-not-allowed"
     title="Up one level (Backspace)" disabled>
@@ -215,18 +112,14 @@ img{display:block;max-width:100%}
       <path d="M5 15l7-7 7 7" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>Up
   </button>
-
   <div id="breadcrumb"></div>
-
   <div class="relative flex-none w-36">
     <input id="search" type="search" placeholder="Filter…"
       class="w-full bg-zinc-800 border border-zinc-600 rounded px-3 py-1.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500"
       autocomplete="off">
     <span id="search-count" class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500"></span>
   </div>
-
-  <select id="sort"
-    class="flex-none bg-zinc-800 border border-zinc-600 rounded px-2 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500">
+  <select id="sort" class="flex-none bg-zinc-800 border border-zinc-600 rounded px-2 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500">
     <option value="date-desc" selected>Newest first</option>
     <option value="date-asc">Oldest first</option>
     <option value="name-asc">Name A→Z</option>
@@ -234,21 +127,18 @@ img{display:block;max-width:100%}
     <option value="size-desc">Size ↓</option>
     <option value="size-asc">Size ↑</option>
   </select>
-
   <label class="flex-none flex items-center gap-1.5 text-gray-400" title="Zoom">
     <svg class="w-3 h-3 opacity-50" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35M8 11h6"/></svg>
     <input id="zoom-range" type="range" min="1" max="11" value="5" class="w-20 accent-blue-500">
     <svg class="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35M11 8v6M8 11h6"/></svg>
   </label>
-
   <span id="stats" class="flex-none text-xs text-gray-500 whitespace-nowrap"></span>
 </header>
 
 <!-- GRID -->
 <main class="flex-1 overflow-hidden" id="grid-viewport">
   <div id="empty-state" class="flex flex-col items-center justify-center h-full gap-5 text-gray-400">
-    <div class="flex flex-col items-center gap-4 border-2 border-dashed border-zinc-600 rounded-xl px-16 py-12 cursor-pointer hover:border-blue-500 hover:bg-zinc-900 transition-colors"
-      onclick="openFolder()">
+    <div class="flex flex-col items-center gap-4 border-2 border-dashed border-zinc-600 rounded-xl px-16 py-12 cursor-pointer hover:border-blue-500 hover:bg-zinc-900 transition-colors" onclick="openFolder()">
       <svg class="w-14 h-14 opacity-30" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24">
         <path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
         <path d="M12 11v6M9 14l3-3 3 3" stroke-linecap="round" stroke-linejoin="round"/>
@@ -283,26 +173,41 @@ img{display:block;max-width:100%}
   </div>
 </div>
 
+<!-- RESUME BANNER -->
+<div id="resume-banner">
+  <svg style="width:1rem;height:1rem;flex-shrink:0;opacity:.7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+    <path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+  </svg>
+  <span id="resume-label" style="font-size:.8rem;color:#93c5fd"></span>
+  <button id="btn-resume" style="background:#2563eb;color:#fff;border:none;border-radius:4px;padding:4px 12px;font-size:.8rem;cursor:pointer;font-weight:500">Resume</button>
+  <button id="btn-resume-dismiss" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:1rem;line-height:1;padding:2px 4px">×</button>
+</div>
+
 <!-- DROP OVERLAY -->
 <div id="drop-overlay"><p class="text-blue-300 text-lg font-medium">Drop folder here</p></div>
 
 <script>
+'use strict';
 // ─────────────────────────────────────────
 //  CONSTANTS
 // ─────────────────────────────────────────
-const IMAGE_EXTS = new Set(['jpg','jpeg','png','gif','webp','avif','bmp','svg','tiff','tif','ico']);
+const IMAGE_EXTS   = new Set(['jpg','jpeg','png','gif','webp','avif','bmp','svg','tiff','tif','ico']);
+const SESSION_KEY  = 'modngaan_session';
+const SESSION_TTL  = 3 * 60 * 60 * 1000; // 3 hours in ms
+const FSAPI        = !!window.showDirectoryPicker; // Chrome/Edge
+const META_BATCH   = 300;
+const MAX_CACHED   = 200;
 
 // ─────────────────────────────────────────
-//  STATE
+//  STATE  (all mutable state in one place)
 // ─────────────────────────────────────────
-// navStack entries:
-//   FSAPI path:  { kind:'fsapi', handle:DirectoryHandle, name:string }
-//   Fallback:    { kind:'fb',    name:string, allFiles:File[], depth:number }
-let navStack       = [];
-let displayItems   = [];
-let currentFolders = []; // folders at current level — used by reFilter
-let currentFiles   = []; // all files at current level — used by reFilter
-let objectURLs     = new Map();
+let navStack       = [];   // { kind:'fsapi'|'fb', handle, name, allFiles?, depth? }
+let displayItems   = [];   // mixed folders + files currently shown
+let photoItems     = [];   // displayItems filtered to files only — cached, rebuilt in buildDisplay
+let dispIdxMap     = new Map(); // item object → index in displayItems — O(1) lightbox lookup
+let currentFolders = [];   // current level's folder items (for reFilter)
+let currentFiles   = [];   // current level's file items unfiltered (for reFilter)
+let objectURLs     = new Map(); // displayItem index → blob URL
 let lbIndex        = 0;
 let cols           = 7;
 let rowH           = 0;
@@ -311,26 +216,28 @@ let scrollTop      = 0;
 let rafPending     = false;
 
 // ─────────────────────────────────────────
-//  DOM
+//  DOM REFS
 // ─────────────────────────────────────────
-const viewport   = document.getElementById('grid-viewport');
-const spacer     = document.getElementById('grid-spacer');
-const gridWin    = document.getElementById('grid-window');
-const emptyState = document.getElementById('empty-state');
-const statsEl    = document.getElementById('stats');
-const statusEl   = document.getElementById('status');
-const searchEl   = document.getElementById('search');
-const sortEl     = document.getElementById('sort');
-const zoomRange  = document.getElementById('zoom-range');
-const breadcrumb = document.getElementById('breadcrumb');
-const btnUp      = document.getElementById('btn-up');
-const lightbox   = document.getElementById('lightbox');
-const lbImg      = document.getElementById('lb-img');
-const lbFilename = document.getElementById('lb-filename');
-const lbPosition = document.getElementById('lb-position');
-const lbMeta     = document.getElementById('lb-meta');
-const searchCount= document.getElementById('search-count');
-const dropOverlay= document.getElementById('drop-overlay');
+const viewport    = document.getElementById('grid-viewport');
+const spacer      = document.getElementById('grid-spacer');
+const gridWin     = document.getElementById('grid-window');
+const emptyState  = document.getElementById('empty-state');
+const statsEl     = document.getElementById('stats');
+const statusEl    = document.getElementById('status');
+const searchEl    = document.getElementById('search');
+const sortEl      = document.getElementById('sort');
+const zoomRange   = document.getElementById('zoom-range');
+const breadcrumb  = document.getElementById('breadcrumb');
+const btnUp       = document.getElementById('btn-up');
+const lightbox    = document.getElementById('lightbox');
+const lbImg       = document.getElementById('lb-img');
+const lbFilename  = document.getElementById('lb-filename');
+const lbPosition  = document.getElementById('lb-position');
+const lbMeta      = document.getElementById('lb-meta');
+const searchCount = document.getElementById('search-count');
+const dropOverlay = document.getElementById('drop-overlay');
+const resumeBanner= document.getElementById('resume-banner');
+const resumeLabel = document.getElementById('resume-label');
 
 // ─────────────────────────────────────────
 //  OPEN FOLDER
@@ -341,16 +248,17 @@ document.addEventListener('keydown', e => {
 });
 
 async function openFolder() {
-  if (window.showDirectoryPicker) {
+  if (FSAPI) {
     try {
-      const handle = await window.showDirectoryPicker({ mode:'read' });
+      const handle = await showDirectoryPicker({ mode:'read' });
+      await idbSet('root_handle', handle);
       clearSession();
       navStack = [{ kind:'fsapi', handle, name:handle.name }];
       await loadFSAPI(handle);
-    } catch(e) { if (e.name!=='AbortError') statusEl.textContent='Error: '+e.message; }
+    } catch(e) { if (e.name!=='AbortError') statusEl.textContent = 'Error: '+e.message; }
     return;
   }
-  // Fallback: webkitdirectory
+  // Firefox / Safari fallback — webkitdirectory
   const inp = document.createElement('input');
   inp.type='file'; inp.webkitdirectory=true; inp.multiple=true;
   inp.addEventListener('change', () => {
@@ -365,7 +273,7 @@ async function openFolder() {
 }
 
 // ─────────────────────────────────────────
-//  LOAD  — File System Access API (shallow)
+//  LOAD — FSAPI (Chrome/Edge)
 // ─────────────────────────────────────────
 async function loadFSAPI(dirHandle) {
   resetView();
@@ -383,48 +291,43 @@ async function loadFSAPI(dirHandle) {
     }
   }
 
-  // ── Show folders immediately — they need no metadata ──
+  // Show folder tiles immediately (no metadata needed)
   buildDisplay(folders, []);
-  statusEl.textContent = files.length ? `Loading ${files.length.toLocaleString()} photos…` : statusEl.textContent;
+  if (files.length) statusEl.textContent = `Loading ${files.length.toLocaleString()} photos…`;
 
-  // ── Resolve ALL file metadata before showing/sorting photos ──
-  // This ensures date-sort is always correct on first render
-  const BATCH = 300;
-  for (let i=0; i<files.length; i+=BATCH) {
-    await Promise.all(files.slice(i,i+BATCH).map(async item => {
+  // Resolve metadata in batches — progressive render
+  for (let i=0; i<files.length; i+=META_BATCH) {
+    await Promise.all(files.slice(i, i+META_BATCH).map(async item => {
       try { const f=await item.handle.getFile(); item.size=f.size; item.lastModified=f.lastModified; } catch{}
     }));
-    // Show progressive batches so large folders feel fast
-    if (i===0 || i+BATCH >= files.length) buildDisplay(folders, files);
+    buildDisplay(folders, files); // re-sort after each batch
   }
 
-  // ── Count folder contents async (non-blocking) ──
+  // Count folder contents non-blocking
   folders.forEach(async fld => {
     let n=0;
     try { for await (const _ of fld.handle.values()) n++; } catch{}
     fld.count = n;
     const cell = gridWin.querySelector(`.folder-cell[data-fname="${CSS.escape(fld.name)}"]`);
-    if (cell) { const el=cell.querySelector('.f-count'); if(el) el.textContent=countLabel(n); }
+    if (cell) { const ct=cell.querySelector('.f-count'); if(ct) ct.textContent=countLabel(n); }
   });
 }
 
 // ─────────────────────────────────────────
-//  LOAD  — webkitdirectory fallback (shallow)
+//  LOAD — Firefox/Safari fallback
+//  File objects already carry size+lastModified — no async metadata needed
 // ─────────────────────────────────────────
 function renderFallback(allFiles, depth) {
   resetView();
-  const subMap = new Map();  // subfolderName → files[]
+  const subMap  = new Map();
   const dirFiles = [];
 
   for (const f of allFiles) {
-    if (f.name.startsWith('.')) {
-      console.log('[PhotoExplorer] skipping dot file (fallback):', f.name);
-      continue;
-    }
+    if (f.name.startsWith('.')) continue;
     const parts = f.webkitRelativePath.split('/');
     if (parts.length === depth+1) {
       const ext = f.name.split('.').pop().toLowerCase();
-      if (IMAGE_EXTS.has(ext) && !f.name.startsWith('.'))
+      if (IMAGE_EXTS.has(ext))
         dirFiles.push({ type:'file', name:f.name, handle:f, size:f.size, lastModified:f.lastModified });
     } else if (parts.length > depth+1) {
       const sub = parts[depth];
@@ -433,25 +336,26 @@ function renderFallback(allFiles, depth) {
     }
   }
 
-  const folders = [...subMap.entries()].map(([name,files]) => ({
-    type:'folder', name, handle:null, count:files.length, _files:files, _depth:depth+1
+  const folders = [...subMap.entries()].map(([name,fls]) => ({
+    type:'folder', name, handle:null, count:fls.length, _files:fls, _depth:depth+1
   }));
 
   buildDisplay(folders, dirFiles);
 }
 
 // ─────────────────────────────────────────
-//  BUILD DISPLAY LIST
+//  BUILD DISPLAY — sorts, caches, renders
 // ─────────────────────────────────────────
 function buildDisplay(folders, files) {
-  // Store at module level so reFilter can re-sort without reloading from disk
   currentFolders = folders;
   currentFiles   = files;
 
+  // Sort folders once alphabetically
   folders.sort((a,b)=>a.name.localeCompare(b.name));
 
+  // Filter + sort files
   const q = searchEl.value.trim().toLowerCase();
-  let filt = q ? files.filter(f=>f.name.toLowerCase().includes(q)) : [...files];
+  let filt = q ? files.filter(f=>f.name.toLowerCase().includes(q)) : files.slice();
 
   const [field,dir] = sortEl.value.split('-');
   filt.sort((a,b)=>{
@@ -463,6 +367,11 @@ function buildDisplay(folders, files) {
 
   displayItems = [...folders, ...filt];
 
+  // ── Cache photo subset + index map (avoids repeated filter/indexOf in lightbox) ──
+  photoItems = filt; // files already sorted, no folders
+  dispIdxMap.clear();
+  displayItems.forEach((item,i)=>dispIdxMap.set(item,i));
+
   searchCount.textContent = q ? filt.length.toLocaleString() : '';
   statsEl.textContent = folders.length
     ? `${folders.length} folder${folders.length!==1?'s':''} · ${filt.length} photo${filt.length!==1?'s':''}`
@@ -471,6 +380,7 @@ function buildDisplay(folders, files) {
 
   updateBreadcrumb();
   initGrid();
+  saveSession();
 }
 
 // ─────────────────────────────────────────
@@ -478,12 +388,10 @@ function buildDisplay(folders, files) {
 // ─────────────────────────────────────────
 async function navigateInto(item) {
   revokeAll();
-  if (item.handle) {
-    // FSAPI
+  if (item.handle && item.kind !== 'fb') {
     navStack.push({ kind:'fsapi', handle:item.handle, name:item.name });
     await loadFSAPI(item.handle);
   } else {
-    // Fallback
     navStack.push({ kind:'fb', name:item.name, allFiles:item._files, depth:item._depth });
     renderFallback(item._files, item._depth);
   }
@@ -491,16 +399,12 @@ async function navigateInto(item) {
 
 async function navigateUp() {
   if (navStack.length<=1) return;
-  revokeAll();
-  navStack.pop();
-  await reloadCurrent();
+  revokeAll(); navStack.pop(); await reloadCurrent();
 }
 
 async function navigateTo(idx) {
   if (idx>=navStack.length-1) return;
-  revokeAll();
-  navStack = navStack.slice(0, idx+1);
-  await reloadCurrent();
+  revokeAll(); navStack=navStack.slice(0,idx+1); await reloadCurrent();
 }
 
 async function reloadCurrent() {
@@ -513,14 +417,22 @@ btnUp.addEventListener('click', navigateUp);
 
 function updateBreadcrumb() {
   btnUp.disabled = navStack.length<=1;
-  breadcrumb.innerHTML='';
+  // Reuse existing spans rather than innerHTML='' + rebuild
+  const children = breadcrumb.children;
+  const needed = navStack.length*2 - 1; // items + separators
+  while (breadcrumb.children.length > needed) breadcrumb.lastChild.remove();
   navStack.forEach((entry,i)=>{
-    if (i>0) { const sep=document.createElement('span'); sep.className='bc-sep'; sep.textContent='/'; breadcrumb.appendChild(sep); }
-    const el=document.createElement('span');
-    el.className='bc-item'+(i===navStack.length-1?' active':'');
-    el.textContent=entry.name; el.title=entry.name;
-    if (i<navStack.length-1) el.addEventListener('click',()=>navigateTo(i));
-    breadcrumb.appendChild(el);
+    const sepIdx = i*2-1, itemIdx = i*2;
+    if (i>0) {
+      let sep = children[sepIdx];
+      if (!sep) { sep=document.createElement('span'); sep.className='bc-sep'; breadcrumb.appendChild(sep); }
+      sep.textContent='/';
+    }
+    let el = children[itemIdx];
+    if (!el) { el=document.createElement('span'); breadcrumb.appendChild(el); }
+    el.className = 'bc-item'+(i===navStack.length-1?' active':'');
+    el.textContent = entry.name; el.title = entry.name;
+    el.onclick = i<navStack.length-1 ? ()=>navigateTo(i) : null;
   });
 }
 
@@ -533,13 +445,13 @@ document.addEventListener('dragleave', ()=>{ if(--dragN<=0){dragN=0;dropOverlay.
 document.addEventListener('dragover', e=>e.preventDefault());
 document.addEventListener('drop', async e=>{
   e.preventDefault(); dragN=0; dropOverlay.classList.remove('show');
-  for (const item of [...e.dataTransfer.items]) {
+  for (const item of e.dataTransfer.items) {
     if (item.kind!=='file') continue;
     if (item.getAsFileSystemHandle) {
       const fsh = await item.getAsFileSystemHandle();
       if (fsh.kind==='directory') {
-        clearSession();
-        navStack=[{kind:'fsapi',handle:fsh,name:fsh.name}];
+        await idbSet('root_handle', fsh);
+        clearSession(); navStack=[{kind:'fsapi',handle:fsh,name:fsh.name}];
         await loadFSAPI(fsh); return;
       }
     }
@@ -547,16 +459,14 @@ document.addEventListener('drop', async e=>{
     if (entry?.isDirectory) {
       const all=[];
       await walkEntry(entry,all);
-      clearSession();
-      const rootName=all[0]?.webkitRelativePath?.split('/')[0]||entry.name;
-      navStack=[{kind:'fb',name:entry.name,allFiles:all,depth:1}];
+      clearSession(); navStack=[{kind:'fb',name:entry.name,allFiles:all,depth:1}];
       renderFallback(all,1); return;
     }
   }
 });
 
 async function walkEntry(entry, out) {
-  if (entry.name.startsWith('.')) return;   // skip ._files, .DS_Store, etc.
+  if (entry.name.startsWith('.')) return;
   if (entry.isFile) {
     await new Promise(res=>entry.file(f=>{out.push(f);res();},res));
   } else if (entry.isDirectory) {
@@ -567,37 +477,36 @@ async function walkEntry(entry, out) {
 }
 
 // ─────────────────────────────────────────
-//  SEARCH & SORT  (re-run buildDisplay with same folders)
+//  SEARCH & SORT
 // ─────────────────────────────────────────
 let searchDebounce;
-searchEl.addEventListener('input', ()=>{ clearTimeout(searchDebounce); searchDebounce=setTimeout(reFilter,150); });
-sortEl.addEventListener('change', reFilter);
-
-function reFilter() {
-  // Use stored current level data — no disk reload needed, no breadcrumb corruption
-  buildDisplay(currentFolders, currentFiles);
-}
+searchEl.addEventListener('input', ()=>{ clearTimeout(searchDebounce); searchDebounce=setTimeout(()=>buildDisplay(currentFolders,currentFiles),150); });
+sortEl.addEventListener('change', ()=>buildDisplay(currentFolders,currentFiles));
 
 // ─────────────────────────────────────────
 //  ZOOM
 // ─────────────────────────────────────────
 zoomRange.addEventListener('input', ()=>{
-  cols = 12 - +zoomRange.value;
-  if(cols<1) cols=1;
+  cols = Math.max(1, 12 - +zoomRange.value);
   revokeAll(); initGrid();
 });
 
 // ─────────────────────────────────────────
-//  SESSION
+//  SESSION STATE
 // ─────────────────────────────────────────
 function clearSession() {
   revokeAll();
-  navStack=[]; displayItems=[]; currentFolders=[]; currentFiles=[]; lbIndex=0;
+  navStack=[]; displayItems=[]; photoItems=[]; dispIdxMap.clear();
+  currentFolders=[]; currentFiles=[]; lbIndex=0;
   searchEl.value=''; searchCount.textContent=''; statsEl.textContent='';
   sortEl.value='date-desc';
-  resetView(); closeLightbox();
+  gridWin.innerHTML=''; gridWin.style.top='0px';
+  spacer.style.height='0px'; spacer.style.display='none';
+  viewport.scrollTop=0; scrollTop=0;
+  closeLightbox();
   breadcrumb.innerHTML=''; btnUp.disabled=true;
   emptyState.style.display='flex';
+  try { sessionStorage.removeItem(SESSION_KEY); } catch{}
 }
 
 function resetView() {
@@ -644,60 +553,46 @@ function renderWindow() {
     const idx  = firstIdx+i;
     const item = displayItems[idx];
     const cell = gridWin.children[i];
-    if (cell.dataset.idx===String(idx)) continue;  // already rendered
-    cell.dataset.idx = idx;
+    if (cell.dataset.idx===String(idx)) continue;
+    cell.dataset.idx=idx;
     cell.innerHTML=''; cell.className=''; cell.onclick=null; cell.onkeydown=null;
     cell.style.height=rowH+'px'; cell.tabIndex=0;
-    if (item.type==='folder') renderFolderCell(cell,item,idx);
-    else                      renderPhotoCell(cell,item,idx);
+    item.type==='folder' ? renderFolderCell(cell,item) : renderPhotoCell(cell,item,idx);
   }
 }
 
-function renderFolderCell(cell, item, idx) {
+function renderFolderCell(cell, item) {
   cell.className='folder-cell';
   cell.dataset.fname=item.name;
   cell.setAttribute('aria-label','Open folder: '+item.name);
-
   const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
   svg.setAttribute('viewBox','0 0 24 24'); svg.setAttribute('fill','none');
   svg.setAttribute('stroke','#facc15'); svg.setAttribute('stroke-width','1.5');
-  svg.style.cssText='width:38%;height:38%;max-width:52px;opacity:0.8;flex-shrink:0';
+  svg.style.cssText='width:38%;height:38%;max-width:52px;opacity:.8;flex-shrink:0';
   svg.innerHTML='<path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>';
   cell.appendChild(svg);
-
   const nm=document.createElement('div'); nm.className='f-name'; nm.textContent=item.name; cell.appendChild(nm);
   const ct=document.createElement('div'); ct.className='f-count';
-  ct.textContent = item.count!==null ? countLabel(item.count) : '…';
-  cell.appendChild(ct);
-
+  ct.textContent=item.count!==null?countLabel(item.count):'…'; cell.appendChild(ct);
   const open=()=>navigateInto(item);
   cell.addEventListener('click', open);
   cell.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' ') open(); });
 }
 
 function renderPhotoCell(cell, item, idx) {
-  if (item.name.startsWith('.')) {
-    console.warn('[PhotoExplorer] dot file slipped through:', item.name);
-    cell.style.display = 'none';
-    return;
-  }
+  if (item.name.startsWith('.')) { cell.style.display='none'; return; }
   cell.className='thumb-cell skeleton';
   const ov=document.createElement('div'); ov.className='name-overlay';
   const sp=document.createElement('span'); sp.className='text-white text-xs truncate w-full'; sp.textContent=item.name;
   ov.appendChild(sp); cell.appendChild(ov);
-
-  // Compute photo index among files only — store on dataset so it's always fresh on click
-  cell.dataset.item = idx; // grid index (used for thumb cache)
-
   const click=()=>{
-    // Re-compute at click time in case sort changed, but use item identity not array position
-    const photos = displayItems.filter(i=>i.type==='file');
-    const pi = photos.indexOf(item);
-    if (pi !== -1) openLightbox(pi);
+    // Use cached photoItems + dispIdxMap — O(1)
+    const pi=photoItems.indexOf(item);
+    if(pi!==-1) openLightbox(pi);
   };
   cell.addEventListener('click', click);
   cell.addEventListener('keydown', e=>{ if(e.key==='Enter') click(); });
-  loadThumb(cell, item, idx);
+  loadThumb(cell,item,idx);
 }
 
 async function loadThumb(cell, item, idx) {
@@ -716,21 +611,22 @@ async function loadThumb(cell, item, idx) {
 
 async function getBlob(item) {
   if (item.handle instanceof File) return item.handle;
-  try { return await item.handle.getFile(); } catch{ return null; }
+  try { return await item.handle.getFile(); } catch { return null; }
 }
 
-// Scroll
+// Single scroll listener
 viewport.addEventListener('scroll', ()=>{
   scrollTop=viewport.scrollTop;
   if(!rafPending){rafPending=true;requestAnimationFrame(()=>{renderWindow();rafPending=false;});}
-});
+  clearTimeout(scrollSaveTimer);
+  scrollSaveTimer=setTimeout(saveSession,500);
+}, { passive:true });
 
-// Resize
 let resizeT;
 window.addEventListener('resize', ()=>{ clearTimeout(resizeT); resizeT=setTimeout(initGrid,200); });
 
 // ─────────────────────────────────────────
-//  LIGHTBOX
+//  LIGHTBOX — uses cached photoItems + dispIdxMap
 // ─────────────────────────────────────────
 async function openLightbox(photoIdx) {
   lbIndex=photoIdx; lightbox.classList.add('open');
@@ -738,30 +634,28 @@ async function openLightbox(photoIdx) {
 }
 
 async function showLbPhoto(idx) {
-  const photos=displayItems.filter(i=>i.type==='file');
   lbIndex=idx;
-  const item=photos[idx]; if(!item) return;
-
+  const item=photoItems[idx]; if(!item) return;
   lbImg.style.opacity='0'; lbImg.src='';
-  const dispIdx=displayItems.indexOf(item);
-  let url=dispIdx>=0?objectURLs.get(dispIdx):null;
+  const di=dispIdxMap.get(item)??-1;
+  let url=di>=0?objectURLs.get(di):null;
   if (!url) {
     const f=await getBlob(item); if(!f) return;
-    url=URL.createObjectURL(f); if(dispIdx>=0) objectURLs.set(dispIdx,url);
+    url=URL.createObjectURL(f); if(di>=0) objectURLs.set(di,url);
   }
   lbImg.onload=()=>lbImg.style.opacity='1';
   lbImg.src=url; lbImg.alt=item.name;
   lbFilename.textContent=item.name;
-  lbPosition.textContent=`${(idx+1).toLocaleString()} / ${photos.length.toLocaleString()}`;
-  lbMeta.textContent=item.size?`${(item.size/1024).toFixed(0)} KB  ${item.lastModified?new Date(item.lastModified).toLocaleDateString():''}`:''  ;
-  preloadAdj(idx, photos);
+  lbPosition.textContent=`${(idx+1).toLocaleString()} / ${photoItems.length.toLocaleString()}`;
+  lbMeta.textContent=item.size?`${(item.size/1024).toFixed(0)} KB  ${item.lastModified?new Date(item.lastModified).toLocaleDateString():''}`:'' ;
+  preloadAdj(idx);
 }
 
-function preloadAdj(idx, photos) {
+function preloadAdj(idx) {
   [-1,1,-2,2].forEach(off=>{
-    const i=idx+off; if(i<0||i>=photos.length) return;
-    const di=displayItems.indexOf(photos[i]);
-    if(di>=0&&!objectURLs.has(di)) getBlob(photos[i]).then(f=>{ if(f&&!objectURLs.has(di)) objectURLs.set(di,URL.createObjectURL(f)); });
+    const i=idx+off; if(i<0||i>=photoItems.length) return;
+    const di=dispIdxMap.get(photoItems[i])??-1;
+    if(di>=0&&!objectURLs.has(di)) getBlob(photoItems[i]).then(f=>{ if(f&&!objectURLs.has(di)) objectURLs.set(di,URL.createObjectURL(f)); });
   });
 }
 
@@ -769,7 +663,7 @@ function closeLightbox() { lightbox.classList.remove('open'); lbImg.src=''; }
 
 document.getElementById('lb-close').addEventListener('click', closeLightbox);
 document.getElementById('lb-nav-prev').addEventListener('click', ()=>{ if(lbIndex>0) showLbPhoto(lbIndex-1); });
-document.getElementById('lb-nav-next').addEventListener('click', ()=>{ const p=displayItems.filter(i=>i.type==='file'); if(lbIndex<p.length-1) showLbPhoto(lbIndex+1); });
+document.getElementById('lb-nav-next').addEventListener('click', ()=>{ if(lbIndex<photoItems.length-1) showLbPhoto(lbIndex+1); });
 lightbox.addEventListener('click', e=>{ if(e.target===lightbox) closeLightbox(); });
 
 // ─────────────────────────────────────────
@@ -780,18 +674,16 @@ document.addEventListener('keydown', e=>{
     e.preventDefault(); navigateUp(); return;
   }
   if (!lightbox.classList.contains('open')) return;
-  const p=displayItems.filter(i=>i.type==='file');
   if (e.key==='Escape')     closeLightbox();
-  if (e.key==='ArrowLeft'  && lbIndex>0)         { e.preventDefault(); showLbPhoto(lbIndex-1); }
-  if (e.key==='ArrowRight' && lbIndex<p.length-1){ e.preventDefault(); showLbPhoto(lbIndex+1); }
+  if (e.key==='ArrowLeft'  && lbIndex>0)                  { e.preventDefault(); showLbPhoto(lbIndex-1); }
+  if (e.key==='ArrowRight' && lbIndex<photoItems.length-1){ e.preventDefault(); showLbPhoto(lbIndex+1); }
   if (e.key==='Home') { e.preventDefault(); showLbPhoto(0); }
-  if (e.key==='End')  { e.preventDefault(); showLbPhoto(p.length-1); }
+  if (e.key==='End')  { e.preventDefault(); showLbPhoto(photoItems.length-1); }
 });
 
 // ─────────────────────────────────────────
 //  MEMORY MANAGEMENT
 // ─────────────────────────────────────────
-const MAX_CACHED=200;
 setInterval(()=>{
   if(objectURLs.size<=MAX_CACHED) return;
   const vIdx=Math.floor(scrollTop/rowH)*cols;
@@ -801,10 +693,155 @@ setInterval(()=>{
 },8000);
 
 // ─────────────────────────────────────────
+//  INDEXEDDB — cached connection, single open
+// ─────────────────────────────────────────
+let _db = null;
+function idbOpen() {
+  if (_db) return Promise.resolve(_db);
+  return new Promise((res,rej)=>{
+    const req=indexedDB.open('modngaan',1);
+    req.onupgradeneeded=e=>e.target.result.createObjectStore('kv');
+    req.onsuccess=e=>{ _db=e.target.result; res(_db); };
+    req.onerror=()=>rej(req.error);
+  });
+}
+async function idbSet(key,val) {
+  try {
+    const db=await idbOpen();
+    await new Promise((res,rej)=>{ const tx=db.transaction('kv','readwrite'); tx.objectStore('kv').put(val,key); tx.oncomplete=res; tx.onerror=()=>rej(tx.error); });
+  } catch{}
+}
+async function idbGet(key) {
+  try {
+    const db=await idbOpen();
+    return new Promise((res,rej)=>{ const tx=db.transaction('kv','readonly'); const r=tx.objectStore('kv').get(key); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); });
+  } catch { return null; }
+}
+
+// ─────────────────────────────────────────
+//  SESSION PERSISTENCE
+//  - sessionStorage: path, scroll, sort, zoom
+//  - IndexedDB: root directory handle (FSAPI only)
+//  - TTL: 3 hours
+//  - Firefox: resumes by asking user to re-open the same folder
+// ─────────────────────────────────────────
+let scrollSaveTimer;
+
+function saveSession() {
+  if (!navStack.length) return;
+  try {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+      path:       navStack.map(e=>e.name),
+      scrollTop:  viewport.scrollTop,
+      sort:       sortEl.value,
+      zoom:       zoomRange.value,
+      ts:         Date.now()
+    }));
+  } catch{}
+}
+
+window.addEventListener('load', async ()=>{
+  try {
+    const raw=sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return;
+    const data=JSON.parse(raw);
+    if (!data.path?.length || Date.now()-data.ts>SESSION_TTL) {
+      sessionStorage.removeItem(SESSION_KEY); return;
+    }
+    const handle = FSAPI ? await idbGet('root_handle') : null;
+    const pathDisplay = data.path.join(' › ');
+    const timeAgo = formatTimeAgo(data.ts);
+    resumeLabel.textContent = `${pathDisplay}  (${timeAgo})`;
+    resumeBanner.classList.add('show');
+    document.getElementById('btn-resume').addEventListener('click', ()=>{
+      resumeBanner.classList.remove('show');
+      resumeSession(data, handle);
+    });
+  } catch{}
+});
+
+document.getElementById('btn-resume-dismiss').addEventListener('click', ()=>{
+  resumeBanner.classList.remove('show');
+  sessionStorage.removeItem(SESSION_KEY);
+});
+
+async function resumeSession(data, rootHandle) {
+  // Restore UI preferences first
+  if (data.zoom) { zoomRange.value=data.zoom; cols=Math.max(1,12-+data.zoom); }
+  if (data.sort) sortEl.value=data.sort;
+
+  // ── FSAPI path (Chrome/Edge) ──
+  if (rootHandle && FSAPI) {
+    try {
+      let perm = await rootHandle.queryPermission({ mode:'read' });
+      if (perm!=='granted') perm=await rootHandle.requestPermission({ mode:'read' });
+      if (perm!=='granted') throw new Error('denied');
+      clearSession();
+      navStack=[{ kind:'fsapi', handle:rootHandle, name:data.path[0] }];
+      await loadFSAPI(rootHandle);
+      await drillDown(data.path);
+      await restoreScroll(data.scrollTop);
+      return;
+    } catch{}
+  }
+
+  // ── Fallback path (Firefox/Safari or handle missing) ──
+  // Ask user to re-open the folder — only one prompt needed
+  if (FSAPI) {
+    statusEl.textContent = `Re-open "${data.path[0]}" to resume`;
+    try {
+      const handle=await showDirectoryPicker({ mode:'read' });
+      await idbSet('root_handle', handle);
+      clearSession();
+      navStack=[{ kind:'fsapi', handle, name:handle.name }];
+      await loadFSAPI(handle);
+      await drillDown(data.path);
+      await restoreScroll(data.scrollTop);
+    } catch(e) { if(e.name!=='AbortError') statusEl.textContent='Could not resume: '+e.message; }
+  } else {
+    // Firefox — webkitdirectory, ask to re-open
+    statusEl.textContent = `Re-open "${data.path[0]}" to resume`;
+    const inp=document.createElement('input');
+    inp.type='file'; inp.webkitdirectory=true; inp.multiple=true;
+    inp.addEventListener('change', async ()=>{
+      if (!inp.files.length) return;
+      const all=[...inp.files];
+      clearSession();
+      const rootName=all[0].webkitRelativePath.split('/')[0]||'Folder';
+      navStack=[{ kind:'fb', name:rootName, allFiles:all, depth:1 }];
+      renderFallback(all,1);
+      await drillDown(data.path);
+      await restoreScroll(data.scrollTop);
+    });
+    inp.click();
+  }
+}
+
+// Navigate into subfolders by name after root is loaded
+async function drillDown(path) {
+  for (let i=1; i<path.length; i++) {
+    const match=displayItems.find(item=>item.type==='folder'&&item.name===path[i]);
+    if (match) await navigateInto(match); else break;
+  }
+}
+
+async function restoreScroll(top) {
+  if (!top) return;
+  await tick(); // wait for grid render
+  viewport.scrollTop=top; scrollTop=top; renderWindow();
+}
+
+// ─────────────────────────────────────────
 //  UTILS
 // ─────────────────────────────────────────
 function tick() { return new Promise(r=>setTimeout(r,0)); }
 function countLabel(n) { return n+' item'+(n!==1?'s':''); }
+function formatTimeAgo(ts) {
+  const s=Math.floor((Date.now()-ts)/1000);
+  if (s<60) return 'just now';
+  if (s<3600) return Math.floor(s/60)+'m ago';
+  return Math.floor(s/3600)+'h ago';
+}
 </script>
 </body>
 </html>
