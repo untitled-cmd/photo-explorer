@@ -383,20 +383,19 @@ async function loadFSAPI(dirHandle) {
     }
   }
 
-  // ── Show grid immediately with what we have ──
-  buildDisplay(folders, files);
+  // ── Show folders immediately — they need no metadata ──
+  buildDisplay(folders, []);
+  statusEl.textContent = files.length ? `Loading ${files.length.toLocaleString()} photos…` : statusEl.textContent;
 
-  // ── Resolve metadata in background (non-blocking) ──
-  // This updates sort order once metadata is ready
-  let metaLoaded = 0;
+  // ── Resolve ALL file metadata before showing/sorting photos ──
+  // This ensures date-sort is always correct on first render
   const BATCH = 300;
   for (let i=0; i<files.length; i+=BATCH) {
     await Promise.all(files.slice(i,i+BATCH).map(async item => {
       try { const f=await item.handle.getFile(); item.size=f.size; item.lastModified=f.lastModified; } catch{}
     }));
-    metaLoaded += Math.min(BATCH, files.length-i);
-    // Re-sort and re-render once all metadata is loaded
-    if (metaLoaded >= files.length) buildDisplay(folders, files);
+    // Show progressive batches so large folders feel fast
+    if (i===0 || i+BATCH >= files.length) buildDisplay(folders, files);
   }
 
   // ── Count folder contents async (non-blocking) ──
