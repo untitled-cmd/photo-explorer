@@ -71,7 +71,7 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif}
 .folder-cell{position:relative;background:#1e1e1e;border:1px solid #2a2a2a;overflow:hidden;cursor:pointer;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;transition:background .12s,border-color .12s}
 .folder-cell:hover{background:#252525;border-color:#3b82f6}
 .folder-cell:focus-visible{outline:2px solid #60a5fa;outline-offset:1px}
-.folder-cell .f-name{font-size:.7rem;color:#ccc;text-align:center;padding:0 6px;overflow:hidden;word-break:break-all;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.folder-cell .f-name{font-size:.7rem;color:#ccc;text-align:center;padding:0 6px;overflow:hidden;word-break:break-all;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-clamp:2}
 .folder-cell .f-count{font-size:.65rem;color:#555}
 
 .skeleton{background:linear-gradient(90deg,#222 25%,#2e2e2e 50%,#222 75%);background-size:200% 100%;animation:shimmer 1.2s infinite}
@@ -231,6 +231,7 @@ let navStack       = [];   // { kind:'fsapi'|'fb', handle, name, allFiles?, dept
 let displayItems   = [];   // mixed folders + files currently shown
 let photoItems     = [];   // displayItems filtered to files only — cached, rebuilt in buildDisplay
 let dispIdxMap     = new Map(); // item object → index in displayItems — O(1) lightbox lookup
+let photoIdxMap    = new Map(); // item object → index in photoItems  — O(1) lightbox lookup
 let currentFolders = [];   // current level's folder items (for reFilter)
 let currentFiles   = [];   // current level's file items unfiltered (for reFilter)
 let objectURLs     = new Map(); // displayItem index → blob URL
@@ -400,14 +401,19 @@ function buildDisplay(folders, files) {
 
   displayItems = [...folders, ...filt];
 
-  // ── Cache photo subset + index map (avoids repeated filter/indexOf in lightbox) ──
+  // ── Cache photo subset + index maps (avoids repeated filter/indexOf in lightbox) ──
   photoItems = filt; // files already sorted, no folders
   dispIdxMap.clear();
   displayItems.forEach((item,i)=>dispIdxMap.set(item,i));
+  photoIdxMap.clear();
+  filt.forEach((item,i)=>photoIdxMap.set(item,i));
 
-  const photoCount = filt.filter(f=>f.mediaType==='image').length;
-  const videoCount = filt.filter(f=>f.mediaType==='video').length;
-  const audioCount = filt.filter(f=>f.mediaType==='audio').length;
+  let photoCount=0, videoCount=0, audioCount=0;
+  for (const f of filt) {
+    if (f.mediaType==='image') photoCount++;
+    else if (f.mediaType==='video') videoCount++;
+    else if (f.mediaType==='audio') audioCount++;
+  }
   const mediaParts = [];
   if (photoCount) mediaParts.push(`${photoCount} photo${photoCount!==1?'s':''}`);
   if (videoCount) mediaParts.push(`${videoCount} video${videoCount!==1?'s':''}`);
@@ -429,7 +435,7 @@ function buildDisplay(folders, files) {
 // ─────────────────────────────────────────
 async function navigateInto(item) {
   revokeAll();
-  if (item.handle && item.kind !== 'fb') {
+  if (item.handle) {
     navStack.push({ kind:'fsapi', handle:item.handle, name:item.name });
     await loadFSAPI(item.handle);
   } else {
@@ -512,7 +518,7 @@ async function walkEntry(entry, out) {
     await new Promise(res=>entry.file(f=>{out.push(f);res();},res));
   } else if (entry.isDirectory) {
     const r=entry.createReader(); let batch;
-    do { batch=await new Promise((res,rej)=>r.readEntries(res,rej)); for(const c of batch) await walkEntry(c,out); }
+    do { batch=await new Promise((res,rej)=>r.readEntries(res,rej)); await Promise.all(batch.map(c=>walkEntry(c,out))); }
     while(batch.length===100);
   }
 }
@@ -648,7 +654,7 @@ function renderPhotoCell(cell, item, idx) {
   }
 
   const click=()=>{
-    const pi=photoItems.indexOf(item);
+    const pi=photoIdxMap.get(item)??-1;
     if(pi!==-1) openLightbox(pi);
   };
   cell.addEventListener('click', click);
@@ -747,11 +753,15 @@ async function showLbPhoto(idx) {
   preloadAdj(idx);
 }
 
+const _preloadPending = new Set();
 function preloadAdj(idx) {
   [-1,1,-2,2].forEach(off=>{
     const i=idx+off; if(i<0||i>=photoItems.length) return;
     const di=dispIdxMap.get(photoItems[i])??-1;
-    if(di>=0&&!objectURLs.has(di)) getBlob(photoItems[i]).then(f=>{ if(f&&!objectURLs.has(di)) objectURLs.set(di,URL.createObjectURL(f)); });
+    if(di>=0&&!objectURLs.has(di)&&!_preloadPending.has(di)) {
+      _preloadPending.add(di);
+      getBlob(photoItems[i]).then(f=>{ _preloadPending.delete(di); if(f&&!objectURLs.has(di)) objectURLs.set(di,URL.createObjectURL(f)); });
+    }
   });
 }
 
