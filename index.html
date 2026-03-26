@@ -732,6 +732,7 @@ async function showLbPhoto(idx) {
   } else if (isVideo) {
     lbAudio.pause(); lbAudio.src='';
     lbVideo.pause(); lbVideo.src=url; lbVideo.load();
+    lbVideo.play().catch(()=>{}); // autoplay — catch if browser blocks it
   } else {
     lbAudio.pause(); lbAudio.src='';
     lbVideo.pause(); lbVideo.src='';
