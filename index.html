@@ -298,15 +298,17 @@ const IMAGE_EXTS = new Set(['jpg','jpeg','png','gif','webp','avif','bmp','svg','
 // navStack entries:
 //   FSAPI path:  { kind:'fsapi', handle:DirectoryHandle, name:string }
 //   Fallback:    { kind:'fb',    name:string, allFiles:File[], depth:number }
-let navStack    = [];
-let displayItems = [];   // { type:'folder'|'file', name, handle, size, lastModified, count?, _files?, _depth? }
-let objectURLs  = new Map();  // displayItem index → blob URL
-let lbIndex     = 0;
-let cols        = 7;
-let rowH        = 0;
-let VISIBLE_ROWS = 12;
-let scrollTop   = 0;
-let rafPending  = false;
+let navStack       = [];
+let displayItems   = [];
+let currentFolders = []; // folders at current level — used by reFilter
+let currentFiles   = []; // all files at current level — used by reFilter
+let objectURLs     = new Map();
+let lbIndex        = 0;
+let cols           = 7;
+let rowH           = 0;
+let VISIBLE_ROWS   = 12;
+let scrollTop      = 0;
+let rafPending     = false;
 
 // ─────────────────────────────────────────
 //  DOM
@@ -371,10 +373,7 @@ async function loadFSAPI(dirHandle) {
 
   const folders=[], files=[];
   for await (const entry of dirHandle.values()) {
-    if (entry.name.startsWith('.')) {
-      console.log('[PhotoExplorer] skipping dot entry:', entry.name);
-      continue;
-    }
+    if (entry.name.startsWith('.')) continue;
     if (entry.kind==='directory') {
       folders.push({ type:'folder', name:entry.name, handle:entry, count:null });
     } else {
@@ -384,25 +383,30 @@ async function loadFSAPI(dirHandle) {
     }
   }
 
-  // Resolve file metadata
-  for (let i=0; i<files.length; i+=300) {
-    await Promise.all(files.slice(i,i+300).map(async item => {
+  // ── Show grid immediately with what we have ──
+  buildDisplay(folders, files);
+
+  // ── Resolve metadata in background (non-blocking) ──
+  // This updates sort order once metadata is ready
+  let metaLoaded = 0;
+  const BATCH = 300;
+  for (let i=0; i<files.length; i+=BATCH) {
+    await Promise.all(files.slice(i,i+BATCH).map(async item => {
       try { const f=await item.handle.getFile(); item.size=f.size; item.lastModified=f.lastModified; } catch{}
     }));
-    if (i>0 && i%3000===0) { statusEl.textContent=`Loading… ${i.toLocaleString()}`; await tick(); }
+    metaLoaded += Math.min(BATCH, files.length-i);
+    // Re-sort and re-render once all metadata is loaded
+    if (metaLoaded >= files.length) buildDisplay(folders, files);
   }
 
-  // Count folder contents async (non-blocking)
+  // ── Count folder contents async (non-blocking) ──
   folders.forEach(async fld => {
     let n=0;
     try { for await (const _ of fld.handle.values()) n++; } catch{}
     fld.count = n;
-    // Update rendered tile if visible
     const cell = gridWin.querySelector(`.folder-cell[data-fname="${CSS.escape(fld.name)}"]`);
     if (cell) { const el=cell.querySelector('.f-count'); if(el) el.textContent=countLabel(n); }
   });
-
-  buildDisplay(folders, files);
 }
 
 // ─────────────────────────────────────────
@@ -441,7 +445,10 @@ function renderFallback(allFiles, depth) {
 //  BUILD DISPLAY LIST
 // ─────────────────────────────────────────
 function buildDisplay(folders, files) {
-  // folders sorted by name, files sorted by current sort
+  // Store at module level so reFilter can re-sort without reloading from disk
+  currentFolders = folders;
+  currentFiles   = files;
+
   folders.sort((a,b)=>a.name.localeCompare(b.name));
 
   const q = searchEl.value.trim().toLowerCase();
@@ -461,7 +468,7 @@ function buildDisplay(folders, files) {
   statsEl.textContent = folders.length
     ? `${folders.length} folder${folders.length!==1?'s':''} · ${filt.length} photo${filt.length!==1?'s':''}`
     : `${filt.length} photo${filt.length!==1?'s':''}`;
-  statusEl.textContent = `${displayItems.length} item${displayItems.length!==1?'s':''} · ${navStack.map(n=>n.name).join(' / ')}`;
+  statusEl.textContent = `${displayItems.length} item${displayItems.length!==1?'s':''}`;
 
   updateBreadcrumb();
   initGrid();
@@ -568,10 +575,8 @@ searchEl.addEventListener('input', ()=>{ clearTimeout(searchDebounce); searchDeb
 sortEl.addEventListener('change', reFilter);
 
 function reFilter() {
-  const folders = displayItems.filter(i=>i.type==='folder');
-  const allFiles = displayItems.filter(i=>i.type==='file');
-  // Merge back with the full unfiltered file list from currentItems (not available here, so we reload)
-  reloadCurrent();
+  // Use stored current level data — no disk reload needed, no breadcrumb corruption
+  buildDisplay(currentFolders, currentFiles);
 }
 
 // ─────────────────────────────────────────
@@ -588,7 +593,7 @@ zoomRange.addEventListener('input', ()=>{
 // ─────────────────────────────────────────
 function clearSession() {
   revokeAll();
-  navStack=[]; displayItems=[]; lbIndex=0;
+  navStack=[]; displayItems=[]; currentFolders=[]; currentFiles=[]; lbIndex=0;
   searchEl.value=''; searchCount.textContent=''; statsEl.textContent='';
   sortEl.value='date-desc';
   resetView(); closeLightbox();
@@ -672,7 +677,6 @@ function renderFolderCell(cell, item, idx) {
 }
 
 function renderPhotoCell(cell, item, idx) {
-  // Safety net: skip dot files that somehow passed filtering
   if (item.name.startsWith('.')) {
     console.warn('[PhotoExplorer] dot file slipped through:', item.name);
     cell.style.display = 'none';
@@ -683,14 +687,18 @@ function renderPhotoCell(cell, item, idx) {
   const sp=document.createElement('span'); sp.className='text-white text-xs truncate w-full'; sp.textContent=item.name;
   ov.appendChild(sp); cell.appendChild(ov);
 
+  // Compute photo index among files only — store on dataset so it's always fresh on click
+  cell.dataset.item = idx; // grid index (used for thumb cache)
+
   const click=()=>{
-    const photos=displayItems.filter(i=>i.type==='file');
-    const pi=photos.indexOf(item);
-    if(pi!==-1) openLightbox(pi);
+    // Re-compute at click time in case sort changed, but use item identity not array position
+    const photos = displayItems.filter(i=>i.type==='file');
+    const pi = photos.indexOf(item);
+    if (pi !== -1) openLightbox(pi);
   };
   cell.addEventListener('click', click);
   cell.addEventListener('keydown', e=>{ if(e.key==='Enter') click(); });
-  loadThumb(cell,item,idx);
+  loadThumb(cell, item, idx);
 }
 
 async function loadThumb(cell, item, idx) {
