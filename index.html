@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Photo Explorer</title>
+<style>
+/* ── Tailwind utility replacements (only classes actually used) ── */
+*,::before,::after{box-sizing:border-box}
+input,button,select,textarea{font-family:inherit}
+button{cursor:pointer}
+img{display:block;max-width:100%}
+
+/* Layout */
+.flex{display:flex}.flex-col{flex-direction:column}.flex-1{flex:1 1 0%}.flex-none{flex:none}
+.items-center{align-items:center}.justify-center{justify-content:center}
+.gap-1{gap:0.25rem}.gap-1\.5{gap:0.375rem}.gap-2{gap:0.5rem}.gap-4{gap:1rem}.gap-5{gap:1.25rem}
+.relative{position:relative}.absolute{position:absolute}
+.top-1\/2{top:50%}.-translate-y-1\/2{transform:translateY(-50%)}
+.right-2{right:0.5rem}.mt-1{margin-top:0.25rem}.ml-auto{margin-left:auto}
+.min-w-0{min-width:0}.w-full{width:100%}.h-full{height:100%}.h-screen{height:100vh}
+.w-3{width:0.75rem}.h-3{height:0.75rem}
+.w-3\.5{width:0.875rem}.h-3\.5{height:0.875rem}
+.w-4{width:1rem}.h-4{height:1rem}
+.w-14{width:3.5rem}.h-14{height:3.5rem}
+.w-20{width:5rem}.w-36{width:9rem}
+.overflow-hidden{overflow:hidden}
+
+/* Spacing */
+.px-2{padding-left:0.5rem;padding-right:0.5rem}
+.px-2\.5{padding-left:0.625rem;padding-right:0.625rem}
+.px-3{padding-left:0.75rem;padding-right:0.75rem}
+.px-4{padding-left:1rem;padding-right:1rem}
+.px-5{padding-left:1.25rem;padding-right:1.25rem}
+.px-16{padding-left:4rem;padding-right:4rem}
+.py-1{padding-top:0.25rem;padding-bottom:0.25rem}
+.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}
+.py-2{padding-top:0.5rem;padding-bottom:0.5rem}
+.py-12{padding-top:3rem;padding-bottom:3rem}
+
+/* Typography */
+.text-xs{font-size:0.75rem;line-height:1rem}
+.text-sm{font-size:0.875rem;line-height:1.25rem}
+.text-base{font-size:1rem;line-height:1.5rem}
+.text-lg{font-size:1.125rem;line-height:1.75rem}
+.text-center{text-align:center}
+.font-medium{font-weight:500}.font-semibold{font-weight:600}
+.whitespace-nowrap{white-space:nowrap}
+.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.w-full.truncate{max-width:100%}
+
+/* Colors — text */
+.text-white{color:#fff}
+.text-gray-200{color:#e5e7eb}.text-gray-400{color:#9ca3af}
+.text-gray-500{color:#6b7280}.text-gray-600{color:#4b5563}
+.text-blue-300{color:#93c5fd}
+
+/* Colors — background */
+.bg-black{background-color:#000}
+.bg-blue-600{background-color:#2563eb}
+.bg-zinc-700{background-color:#3f3f46}
+.bg-zinc-800{background-color:#27272a}
+.bg-zinc-900{background-color:#18181b}
+
+/* Colors — border */
+.border{border-width:1px;border-style:solid}
+.border-2{border-width:2px;border-style:solid}
+.border-b{border-bottom-width:1px;border-bottom-style:solid}
+.border-t{border-top-width:1px;border-top-style:solid}
+.border-dashed{border-style:dashed}
+.border-zinc-600{border-color:#52525b}
+.border-zinc-700{border-color:#3f3f46}
+
+/* Rounded */
+.rounded{border-radius:0.25rem}.rounded-xl{border-radius:0.75rem}
+
+/* Misc */
+.opacity-30{opacity:0.3}.opacity-50{opacity:0.5}
+.cursor-pointer{cursor:pointer}
+
+/* Hover states */
+.hover\:bg-blue-500:hover{background-color:#3b82f6}
+.hover\:bg-zinc-600:hover{background-color:#52525b}
+.hover\:bg-zinc-900:hover{background-color:#18181b}
+.hover\:border-blue-500:hover{border-color:#3b82f6}
+
+/* Focus states */
+.focus\:outline-none:focus{outline:none}
+.focus\:ring-2:focus{box-shadow:0 0 0 2px rgba(96,165,250,0.5)}
+.focus\:ring-blue-400:focus{box-shadow:0 0 0 2px #60a5fa}
+.focus\:border-blue-500:focus{border-color:#3b82f6}
+
+/* Disabled states */
+.disabled\:opacity-30:disabled{opacity:0.3}
+.disabled\:cursor-not-allowed:disabled{cursor:not-allowed}
+
+/* Placeholder */
+.placeholder-gray-500::placeholder{color:#6b7280}
+
+/* Accent */
+.accent-blue-500{accent-color:#3b82f6}
+
+/* Transition */
+.transition-colors{transition:color 0.15s,background-color 0.15s,border-color 0.15s}
+
+/* ── App-specific styles ── */
+  body { font-family: 'Segoe UI', 'Noto Sans Thai', sans-serif; }
+
+  #grid-viewport { overflow-y: auto; will-change: scroll-position; contain: strict; }
+  #grid-spacer   { position: relative; width: 100%; }
+  #grid-window   { position: absolute; top: 0; left: 0; right: 0; }
+
+  /* Photo tile */
+  .thumb-cell {
+    position: relative; background: #1a1a1a;
+    overflow: hidden; cursor: pointer; aspect-ratio: 1;
+  }
+  .thumb-cell img { width:100%; height:100%; object-fit:cover; display:block; transition:opacity 0.15s; }
+  .thumb-cell:hover img { opacity: 0.82; }
+  .thumb-cell:focus-visible { outline: 2px solid #60a5fa; outline-offset: 1px; }
+  .thumb-cell .name-overlay {
+    position:absolute; inset:0; background:rgba(0,0,0,0.55);
+    opacity:0; transition:opacity 0.15s;
+    display:flex; align-items:flex-end; padding:6px;
+  }
+  .thumb-cell:hover .name-overlay { opacity: 1; }
+
+  /* Folder tile */
+  .folder-cell {
+    position:relative; background:#1e1e1e; border:1px solid #2a2a2a;
+    overflow:hidden; cursor:pointer; aspect-ratio:1;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;
+    transition: background 0.12s, border-color 0.12s;
+  }
+  .folder-cell:hover  { background:#252525; border-color:#3b82f6; }
+  .folder-cell:focus-visible { outline:2px solid #60a5fa; outline-offset:1px; }
+  .folder-cell .f-name {
+    font-size:0.7rem; color:#ccc; text-align:center; padding:0 6px;
+    overflow:hidden; word-break:break-all;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+  }
+  .folder-cell .f-count { font-size:0.65rem; color:#555; }
+
+  /* Skeleton */
+  .skeleton {
+    background: linear-gradient(90deg,#222 25%,#2e2e2e 50%,#222 75%);
+    background-size:200% 100%; animation:shimmer 1.2s infinite;
+  }
+  @keyframes shimmer { to { background-position:-200% 0; } }
+
+  /* Lightbox */
+  #lightbox {
+    position:fixed; inset:0; z-index:50; background:rgba(0,0,0,0.96);
+    display:none; align-items:center; justify-content:center;
+  }
+  #lightbox.open { display:flex; }
+  #lb-img { max-width:92vw; max-height:90vh; object-fit:contain; user-select:none; transition:opacity 0.12s; }
+  #lb-nav-prev,#lb-nav-next {
+    position:absolute; top:50%; transform:translateY(-50%);
+    background:rgba(255,255,255,0.1); border:none; color:#fff;
+    font-size:2rem; padding:12px 18px; cursor:pointer;
+    border-radius:4px; transition:background 0.15s;
+  }
+  #lb-nav-prev:hover,#lb-nav-next:hover { background:rgba(255,255,255,0.25); }
+  #lb-nav-prev { left:12px; } #lb-nav-next { right:12px; }
+  #lb-close { position:absolute; top:12px; right:16px; background:none; border:none; color:#fff; font-size:1.75rem; cursor:pointer; line-height:1; }
+  #lb-info {
+    position:absolute; bottom:0; left:0; right:0;
+    background:rgba(0,0,0,0.7); color:#ccc; padding:10px 16px; font-size:0.8rem;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+
+  /* Breadcrumb */
+  #breadcrumb { display:flex; align-items:center; gap:2px; min-width:0; flex:1; overflow:hidden; flex-wrap:nowrap; }
+  .bc-item {
+    color:#60a5fa; cursor:pointer; font-size:0.8rem; padding:1px 4px; border-radius:3px;
+    transition:background 0.1s; white-space:nowrap; max-width:160px;
+    overflow:hidden; text-overflow:ellipsis; flex-shrink:1;
+  }
+  .bc-item:hover { background:rgba(96,165,250,0.15); }
+  .bc-item.active { color:#e4e4e7; cursor:default; pointer-events:none; }
+  .bc-sep { color:#444; font-size:0.75rem; flex-shrink:0; }
+
+  /* Drop overlay */
+  #drop-overlay {
+    display:none; position:fixed; inset:0; z-index:40;
+    background:rgba(59,130,246,0.12); border:3px dashed #3b82f6;
+    pointer-events:none; align-items:center; justify-content:center;
+  }
+  #drop-overlay.show { display:flex; }
+
+  /* Scrollbar */
+  #grid-viewport::-webkit-scrollbar { width:6px; }
+  #grid-viewport::-webkit-scrollbar-track { background:#111; }
+  #grid-viewport::-webkit-scrollbar-thumb { background:#444; border-radius:3px; }
+</style>
+</head>
+<body class="bg-black text-gray-200 h-screen flex flex-col overflow-hidden">
+
+<!-- TOOLBAR -->
+<header class="flex-none flex items-center gap-2 px-3 py-2 bg-zinc-900 border-b border-zinc-700 min-w-0">
+
+  <button id="btn-open"
+    class="flex-none flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium px-3 py-1.5 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+    title="Open folder (Ctrl+O)">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+    </svg>Open
+  </button>
+
+  <button id="btn-up"
+    class="flex-none flex items-center gap-1 bg-zinc-700 hover:bg-zinc-600 text-sm px-2.5 py-1.5 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+    title="Up one level (Backspace)" disabled>
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path d="M5 15l7-7 7 7" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>Up
+  </button>
+
+  <div id="breadcrumb"></div>
+
+  <div class="relative flex-none w-36">
+    <input id="search" type="search" placeholder="Filter…"
+      class="w-full bg-zinc-800 border border-zinc-600 rounded px-3 py-1.5 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500"
+      autocomplete="off">
+    <span id="search-count" class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500"></span>
+  </div>
+
+  <select id="sort"
+    class="flex-none bg-zinc-800 border border-zinc-600 rounded px-2 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500">
+    <option value="date-desc" selected>Newest first</option>
+    <option value="date-asc">Oldest first</option>
+    <option value="name-asc">Name A→Z</option>
+    <option value="name-desc">Name Z→A</option>
+    <option value="size-desc">Size ↓</option>
+    <option value="size-asc">Size ↑</option>
+  </select>
+
+  <label class="flex-none flex items-center gap-1.5 text-gray-400" title="Zoom">
+    <svg class="w-3 h-3 opacity-50" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35M8 11h6"/></svg>
+    <input id="zoom-range" type="range" min="1" max="11" value="5" class="w-20 accent-blue-500">
+    <svg class="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35M11 8v6M8 11h6"/></svg>
+  </label>
+
+  <span id="stats" class="flex-none text-xs text-gray-500 whitespace-nowrap"></span>
+</header>
+
+<!-- GRID -->
+<main class="flex-1 overflow-hidden" id="grid-viewport">
+  <div id="empty-state" class="flex flex-col items-center justify-center h-full gap-5 text-gray-400">
+    <div class="flex flex-col items-center gap-4 border-2 border-dashed border-zinc-600 rounded-xl px-16 py-12 cursor-pointer hover:border-blue-500 hover:bg-zinc-900 transition-colors"
+      onclick="openFolder()">
+      <svg class="w-14 h-14 opacity-30" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24">
+        <path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+        <path d="M12 11v6M9 14l3-3 3 3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="text-center">
+        <p class="text-base font-semibold text-gray-200">Open a folder</p>
+        <p class="text-sm mt-1">Click here or drag &amp; drop a folder</p>
+      </div>
+      <span class="bg-blue-600 text-white text-sm font-medium px-5 py-2 rounded">Choose Folder</span>
+    </div>
+    <p class="text-xs text-gray-600">JPEG · PNG · GIF · WebP · AVIF · BMP · SVG</p>
+  </div>
+  <div id="grid-spacer" style="display:none"><div id="grid-window"></div></div>
+</main>
+
+<!-- STATUS -->
+<footer class="flex-none flex items-center gap-4 px-4 py-1 bg-zinc-900 border-t border-zinc-700 text-xs text-gray-500">
+  <span id="status">Ready — open a folder to begin.</span>
+  <span class="ml-auto">← → photos · Backspace = up · Esc = close</span>
+</footer>
+
+<!-- LIGHTBOX -->
+<div id="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
+  <button id="lb-close" aria-label="Close">×</button>
+  <button id="lb-nav-prev">&#8249;</button>
+  <img id="lb-img" src="" alt="">
+  <button id="lb-nav-next">&#8250;</button>
+  <div id="lb-info">
+    <span id="lb-filename"></span>
+    <span id="lb-position"></span>
+    <span id="lb-meta"></span>
+  </div>
+</div>
+
+<!-- DROP OVERLAY -->
+<div id="drop-overlay"><p class="text-blue-300 text-lg font-medium">Drop folder here</p></div>
+
+<script>
+// ─────────────────────────────────────────
+//  CONSTANTS
+// ─────────────────────────────────────────
+const IMAGE_EXTS = new Set(['jpg','jpeg','png','gif','webp','avif','bmp','svg','tiff','tif','ico']);
+
+// ─────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────
+// navStack entries:
+//   FSAPI path:  { kind:'fsapi', handle:DirectoryHandle, name:string }
+//   Fallback:    { kind:'fb',    name:string, allFiles:File[], depth:number }
+let navStack    = [];
+let displayItems = [];   // { type:'folder'|'file', name, handle, size, lastModified, count?, _files?, _depth? }
+let objectURLs  = new Map();  // displayItem index → blob URL
+let lbIndex     = 0;
+let cols        = 7;
+let rowH        = 0;
+let VISIBLE_ROWS = 12;
+let scrollTop   = 0;
+let rafPending  = false;
+
+// ─────────────────────────────────────────
+//  DOM
+// ─────────────────────────────────────────
+const viewport   = document.getElementById('grid-viewport');
+const spacer     = document.getElementById('grid-spacer');
+const gridWin    = document.getElementById('grid-window');
+const emptyState = document.getElementById('empty-state');
+const statsEl    = document.getElementById('stats');
+const statusEl   = document.getElementById('status');
+const searchEl   = document.getElementById('search');
+const sortEl     = document.getElementById('sort');
+const zoomRange  = document.getElementById('zoom-range');
+const breadcrumb = document.getElementById('breadcrumb');
+const btnUp      = document.getElementById('btn-up');
+const lightbox   = document.getElementById('lightbox');
+const lbImg      = document.getElementById('lb-img');
+const lbFilename = document.getElementById('lb-filename');
+const lbPosition = document.getElementById('lb-position');
+const lbMeta     = document.getElementById('lb-meta');
+const searchCount= document.getElementById('search-count');
+const dropOverlay= document.getElementById('drop-overlay');
+
+// ─────────────────────────────────────────
+//  OPEN FOLDER
+// ─────────────────────────────────────────
+document.getElementById('btn-open').addEventListener('click', openFolder);
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey||e.metaKey) && e.key==='o') { e.preventDefault(); openFolder(); }
+});
+
+async function openFolder() {
+  if (window.showDirectoryPicker) {
+    try {
+      const handle = await window.showDirectoryPicker({ mode:'read' });
+      clearSession();
+      navStack = [{ kind:'fsapi', handle, name:handle.name }];
+      await loadFSAPI(handle);
+    } catch(e) { if (e.name!=='AbortError') statusEl.textContent='Error: '+e.message; }
+    return;
+  }
+  // Fallback: webkitdirectory
+  const inp = document.createElement('input');
+  inp.type='file'; inp.webkitdirectory=true; inp.multiple=true;
+  inp.addEventListener('change', () => {
+    if (!inp.files.length) return;
+    const all = [...inp.files];
+    clearSession();
+    const rootName = all[0].webkitRelativePath.split('/')[0] || 'Folder';
+    navStack = [{ kind:'fb', name:rootName, allFiles:all, depth:1 }];
+    renderFallback(all, 1);
+  });
+  inp.click();
+}
+
+// ─────────────────────────────────────────
+//  LOAD  — File System Access API (shallow)
+// ─────────────────────────────────────────
+async function loadFSAPI(dirHandle) {
+  resetView();
+  statusEl.textContent = 'Reading…';
+
+  const folders=[], files=[];
+  for await (const entry of dirHandle.values()) {
+    if (entry.name.startsWith('.')) {
+      console.log('[PhotoExplorer] skipping dot entry:', entry.name);
+      continue;
+    }
+    if (entry.kind==='directory') {
+      folders.push({ type:'folder', name:entry.name, handle:entry, count:null });
+    } else {
+      const ext = entry.name.split('.').pop().toLowerCase();
+      if (IMAGE_EXTS.has(ext))
+        files.push({ type:'file', name:entry.name, handle:entry, size:0, lastModified:0 });
+    }
+  }
+
+  // Resolve file metadata
+  for (let i=0; i<files.length; i+=300) {
+    await Promise.all(files.slice(i,i+300).map(async item => {
+      try { const f=await item.handle.getFile(); item.size=f.size; item.lastModified=f.lastModified; } catch{}
+    }));
+    if (i>0 && i%3000===0) { statusEl.textContent=`Loading… ${i.toLocaleString()}`; await tick(); }
+  }
+
+  // Count folder contents async (non-blocking)
+  folders.forEach(async fld => {
+    let n=0;
+    try { for await (const _ of fld.handle.values()) n++; } catch{}
+    fld.count = n;
+    // Update rendered tile if visible
+    const cell = gridWin.querySelector(`.folder-cell[data-fname="${CSS.escape(fld.name)}"]`);
+    if (cell) { const el=cell.querySelector('.f-count'); if(el) el.textContent=countLabel(n); }
+  });
+
+  buildDisplay(folders, files);
+}
+
+// ─────────────────────────────────────────
+//  LOAD  — webkitdirectory fallback (shallow)
+// ─────────────────────────────────────────
+function renderFallback(allFiles, depth) {
+  resetView();
+  const subMap = new Map();  // subfolderName → files[]
+  const dirFiles = [];
+
+  for (const f of allFiles) {
+    if (f.name.startsWith('.')) {
+      console.log('[PhotoExplorer] skipping dot file (fallback):', f.name);
+      continue;
+    }
+    const parts = f.webkitRelativePath.split('/');
+    if (parts.length === depth+1) {
+      const ext = f.name.split('.').pop().toLowerCase();
+      if (IMAGE_EXTS.has(ext) && !f.name.startsWith('.'))
+        dirFiles.push({ type:'file', name:f.name, handle:f, size:f.size, lastModified:f.lastModified });
+    } else if (parts.length > depth+1) {
+      const sub = parts[depth];
+      if (!subMap.has(sub)) subMap.set(sub,[]);
+      subMap.get(sub).push(f);
+    }
+  }
+
+  const folders = [...subMap.entries()].map(([name,files]) => ({
+    type:'folder', name, handle:null, count:files.length, _files:files, _depth:depth+1
+  }));
+
+  buildDisplay(folders, dirFiles);
+}
+
+// ─────────────────────────────────────────
+//  BUILD DISPLAY LIST
+// ─────────────────────────────────────────
+function buildDisplay(folders, files) {
+  // folders sorted by name, files sorted by current sort
+  folders.sort((a,b)=>a.name.localeCompare(b.name));
+
+  const q = searchEl.value.trim().toLowerCase();
+  let filt = q ? files.filter(f=>f.name.toLowerCase().includes(q)) : [...files];
+
+  const [field,dir] = sortEl.value.split('-');
+  filt.sort((a,b)=>{
+    const va = field==='name'?a.name : field==='size'?a.size : a.lastModified;
+    const vb = field==='name'?b.name : field==='size'?b.size : b.lastModified;
+    if (typeof va==='string') return dir==='asc'?va.localeCompare(vb):vb.localeCompare(va);
+    return dir==='asc'?va-vb:vb-va;
+  });
+
+  displayItems = [...folders, ...filt];
+
+  searchCount.textContent = q ? filt.length.toLocaleString() : '';
+  statsEl.textContent = folders.length
+    ? `${folders.length} folder${folders.length!==1?'s':''} · ${filt.length} photo${filt.length!==1?'s':''}`
+    : `${filt.length} photo${filt.length!==1?'s':''}`;
+  statusEl.textContent = `${displayItems.length} item${displayItems.length!==1?'s':''} · ${navStack.map(n=>n.name).join(' / ')}`;
+
+  updateBreadcrumb();
+  initGrid();
+}
+
+// ─────────────────────────────────────────
+//  NAVIGATION
+// ─────────────────────────────────────────
+async function navigateInto(item) {
+  revokeAll();
+  if (item.handle) {
+    // FSAPI
+    navStack.push({ kind:'fsapi', handle:item.handle, name:item.name });
+    await loadFSAPI(item.handle);
+  } else {
+    // Fallback
+    navStack.push({ kind:'fb', name:item.name, allFiles:item._files, depth:item._depth });
+    renderFallback(item._files, item._depth);
+  }
+}
+
+async function navigateUp() {
+  if (navStack.length<=1) return;
+  revokeAll();
+  navStack.pop();
+  await reloadCurrent();
+}
+
+async function navigateTo(idx) {
+  if (idx>=navStack.length-1) return;
+  revokeAll();
+  navStack = navStack.slice(0, idx+1);
+  await reloadCurrent();
+}
+
+async function reloadCurrent() {
+  const cur = navStack[navStack.length-1];
+  if (cur.kind==='fsapi') await loadFSAPI(cur.handle);
+  else renderFallback(cur.allFiles, cur.depth);
+}
+
+btnUp.addEventListener('click', navigateUp);
+
+function updateBreadcrumb() {
+  btnUp.disabled = navStack.length<=1;
+  breadcrumb.innerHTML='';
+  navStack.forEach((entry,i)=>{
+    if (i>0) { const sep=document.createElement('span'); sep.className='bc-sep'; sep.textContent='/'; breadcrumb.appendChild(sep); }
+    const el=document.createElement('span');
+    el.className='bc-item'+(i===navStack.length-1?' active':'');
+    el.textContent=entry.name; el.title=entry.name;
+    if (i<navStack.length-1) el.addEventListener('click',()=>navigateTo(i));
+    breadcrumb.appendChild(el);
+  });
+}
+
+// ─────────────────────────────────────────
+//  DRAG & DROP
+// ─────────────────────────────────────────
+let dragN=0;
+document.addEventListener('dragenter', e=>{ e.preventDefault(); dragN++; dropOverlay.classList.add('show'); });
+document.addEventListener('dragleave', ()=>{ if(--dragN<=0){dragN=0;dropOverlay.classList.remove('show');} });
+document.addEventListener('dragover', e=>e.preventDefault());
+document.addEventListener('drop', async e=>{
+  e.preventDefault(); dragN=0; dropOverlay.classList.remove('show');
+  for (const item of [...e.dataTransfer.items]) {
+    if (item.kind!=='file') continue;
+    if (item.getAsFileSystemHandle) {
+      const fsh = await item.getAsFileSystemHandle();
+      if (fsh.kind==='directory') {
+        clearSession();
+        navStack=[{kind:'fsapi',handle:fsh,name:fsh.name}];
+        await loadFSAPI(fsh); return;
+      }
+    }
+    const entry = item.webkitGetAsEntry?.();
+    if (entry?.isDirectory) {
+      const all=[];
+      await walkEntry(entry,all);
+      clearSession();
+      const rootName=all[0]?.webkitRelativePath?.split('/')[0]||entry.name;
+      navStack=[{kind:'fb',name:entry.name,allFiles:all,depth:1}];
+      renderFallback(all,1); return;
+    }
+  }
+});
+
+async function walkEntry(entry, out) {
+  if (entry.name.startsWith('.')) return;   // skip ._files, .DS_Store, etc.
+  if (entry.isFile) {
+    await new Promise(res=>entry.file(f=>{out.push(f);res();},res));
+  } else if (entry.isDirectory) {
+    const r=entry.createReader(); let batch;
+    do { batch=await new Promise((res,rej)=>r.readEntries(res,rej)); for(const c of batch) await walkEntry(c,out); }
+    while(batch.length===100);
+  }
+}
+
+// ─────────────────────────────────────────
+//  SEARCH & SORT  (re-run buildDisplay with same folders)
+// ─────────────────────────────────────────
+let searchDebounce;
+searchEl.addEventListener('input', ()=>{ clearTimeout(searchDebounce); searchDebounce=setTimeout(reFilter,150); });
+sortEl.addEventListener('change', reFilter);
+
+function reFilter() {
+  const folders = displayItems.filter(i=>i.type==='folder');
+  const allFiles = displayItems.filter(i=>i.type==='file');
+  // Merge back with the full unfiltered file list from currentItems (not available here, so we reload)
+  reloadCurrent();
+}
+
+// ─────────────────────────────────────────
+//  ZOOM
+// ─────────────────────────────────────────
+zoomRange.addEventListener('input', ()=>{
+  cols = 12 - +zoomRange.value;
+  if(cols<1) cols=1;
+  revokeAll(); initGrid();
+});
+
+// ─────────────────────────────────────────
+//  SESSION
+// ─────────────────────────────────────────
+function clearSession() {
+  revokeAll();
+  navStack=[]; displayItems=[]; lbIndex=0;
+  searchEl.value=''; searchCount.textContent=''; statsEl.textContent='';
+  sortEl.value='date-desc';
+  resetView(); closeLightbox();
+  breadcrumb.innerHTML=''; btnUp.disabled=true;
+  emptyState.style.display='flex';
+}
+
+function resetView() {
+  revokeAll();
+  gridWin.innerHTML=''; gridWin.style.top='0px';
+  spacer.style.height='0px'; spacer.style.display='none';
+  viewport.scrollTop=0; scrollTop=0;
+}
+
+function revokeAll() {
+  for (const u of objectURLs.values()) URL.revokeObjectURL(u);
+  objectURLs.clear();
+}
+
+// ─────────────────────────────────────────
+//  VIRTUAL GRID
+// ─────────────────────────────────────────
+function initGrid() {
+  if (!displayItems.length) { emptyState.style.display='flex'; spacer.style.display='none'; return; }
+  emptyState.style.display='none'; spacer.style.display='block';
+  rowH = Math.floor(viewport.clientWidth / cols);
+  spacer.style.height = (Math.ceil(displayItems.length/cols)*rowH)+'px';
+  VISIBLE_ROWS = Math.ceil(viewport.clientHeight/rowH)+4;
+  renderWindow();
+}
+
+function renderWindow() {
+  if (!rowH) return;
+  const firstRow = Math.max(0, Math.floor(scrollTop/rowH)-2);
+  const lastRow  = Math.min(Math.ceil(displayItems.length/cols)-1, firstRow+VISIBLE_ROWS+4);
+  const firstIdx = firstRow*cols;
+  const lastIdx  = Math.min(displayItems.length-1, (lastRow+1)*cols-1);
+  const needed   = lastIdx-firstIdx+1;
+
+  gridWin.style.top = (firstRow*rowH)+'px';
+  gridWin.style.display='grid';
+  gridWin.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+  gridWin.style.gap='2px';
+
+  while (gridWin.children.length>needed) gridWin.lastChild.remove();
+  while (gridWin.children.length<needed) gridWin.appendChild(document.createElement('div'));
+
+  for (let i=0; i<needed; i++) {
+    const idx  = firstIdx+i;
+    const item = displayItems[idx];
+    const cell = gridWin.children[i];
+    if (cell.dataset.idx===String(idx)) continue;  // already rendered
+    cell.dataset.idx = idx;
+    cell.innerHTML=''; cell.className=''; cell.onclick=null; cell.onkeydown=null;
+    cell.style.height=rowH+'px'; cell.tabIndex=0;
+    if (item.type==='folder') renderFolderCell(cell,item,idx);
+    else                      renderPhotoCell(cell,item,idx);
+  }
+}
+
+function renderFolderCell(cell, item, idx) {
+  cell.className='folder-cell';
+  cell.dataset.fname=item.name;
+  cell.setAttribute('aria-label','Open folder: '+item.name);
+
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('viewBox','0 0 24 24'); svg.setAttribute('fill','none');
+  svg.setAttribute('stroke','#facc15'); svg.setAttribute('stroke-width','1.5');
+  svg.style.cssText='width:38%;height:38%;max-width:52px;opacity:0.8;flex-shrink:0';
+  svg.innerHTML='<path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>';
+  cell.appendChild(svg);
+
+  const nm=document.createElement('div'); nm.className='f-name'; nm.textContent=item.name; cell.appendChild(nm);
+  const ct=document.createElement('div'); ct.className='f-count';
+  ct.textContent = item.count!==null ? countLabel(item.count) : '…';
+  cell.appendChild(ct);
+
+  const open=()=>navigateInto(item);
+  cell.addEventListener('click', open);
+  cell.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' ') open(); });
+}
+
+function renderPhotoCell(cell, item, idx) {
+  // Safety net: skip dot files that somehow passed filtering
+  if (item.name.startsWith('.')) {
+    console.warn('[PhotoExplorer] dot file slipped through:', item.name);
+    cell.style.display = 'none';
+    return;
+  }
+  cell.className='thumb-cell skeleton';
+  const ov=document.createElement('div'); ov.className='name-overlay';
+  const sp=document.createElement('span'); sp.className='text-white text-xs truncate w-full'; sp.textContent=item.name;
+  ov.appendChild(sp); cell.appendChild(ov);
+
+  const click=()=>{
+    const photos=displayItems.filter(i=>i.type==='file');
+    const pi=photos.indexOf(item);
+    if(pi!==-1) openLightbox(pi);
+  };
+  cell.addEventListener('click', click);
+  cell.addEventListener('keydown', e=>{ if(e.key==='Enter') click(); });
+  loadThumb(cell,item,idx);
+}
+
+async function loadThumb(cell, item, idx) {
+  let url=objectURLs.get(idx);
+  if (!url) {
+    const f=await getBlob(item); if(!f){cell.classList.remove('skeleton');return;}
+    url=URL.createObjectURL(f); objectURLs.set(idx,url);
+  }
+  if (cell.dataset.idx!==String(idx)) return;
+  const img=document.createElement('img');
+  img.src=url; img.alt=item.name; img.decoding='async'; img.loading='lazy';
+  img.addEventListener('load', ()=>{ if(cell.dataset.idx===String(idx)) cell.classList.remove('skeleton'); });
+  img.addEventListener('error', ()=>cell.classList.remove('skeleton'));
+  cell.insertBefore(img,cell.firstChild);
+}
+
+async function getBlob(item) {
+  if (item.handle instanceof File) return item.handle;
+  try { return await item.handle.getFile(); } catch{ return null; }
+}
+
+// Scroll
+viewport.addEventListener('scroll', ()=>{
+  scrollTop=viewport.scrollTop;
+  if(!rafPending){rafPending=true;requestAnimationFrame(()=>{renderWindow();rafPending=false;});}
+});
+
+// Resize
+let resizeT;
+window.addEventListener('resize', ()=>{ clearTimeout(resizeT); resizeT=setTimeout(initGrid,200); });
+
+// ─────────────────────────────────────────
+//  LIGHTBOX
+// ─────────────────────────────────────────
+async function openLightbox(photoIdx) {
+  lbIndex=photoIdx; lightbox.classList.add('open');
+  await showLbPhoto(photoIdx);
+}
+
+async function showLbPhoto(idx) {
+  const photos=displayItems.filter(i=>i.type==='file');
+  lbIndex=idx;
+  const item=photos[idx]; if(!item) return;
+
+  lbImg.style.opacity='0'; lbImg.src='';
+  const dispIdx=displayItems.indexOf(item);
+  let url=dispIdx>=0?objectURLs.get(dispIdx):null;
+  if (!url) {
+    const f=await getBlob(item); if(!f) return;
+    url=URL.createObjectURL(f); if(dispIdx>=0) objectURLs.set(dispIdx,url);
+  }
+  lbImg.onload=()=>lbImg.style.opacity='1';
+  lbImg.src=url; lbImg.alt=item.name;
+  lbFilename.textContent=item.name;
+  lbPosition.textContent=`${(idx+1).toLocaleString()} / ${photos.length.toLocaleString()}`;
+  lbMeta.textContent=item.size?`${(item.size/1024).toFixed(0)} KB  ${item.lastModified?new Date(item.lastModified).toLocaleDateString():''}`:''  ;
+  preloadAdj(idx, photos);
+}
+
+function preloadAdj(idx, photos) {
+  [-1,1,-2,2].forEach(off=>{
+    const i=idx+off; if(i<0||i>=photos.length) return;
+    const di=displayItems.indexOf(photos[i]);
+    if(di>=0&&!objectURLs.has(di)) getBlob(photos[i]).then(f=>{ if(f&&!objectURLs.has(di)) objectURLs.set(di,URL.createObjectURL(f)); });
+  });
+}
+
+function closeLightbox() { lightbox.classList.remove('open'); lbImg.src=''; }
+
+document.getElementById('lb-close').addEventListener('click', closeLightbox);
+document.getElementById('lb-nav-prev').addEventListener('click', ()=>{ if(lbIndex>0) showLbPhoto(lbIndex-1); });
+document.getElementById('lb-nav-next').addEventListener('click', ()=>{ const p=displayItems.filter(i=>i.type==='file'); if(lbIndex<p.length-1) showLbPhoto(lbIndex+1); });
+lightbox.addEventListener('click', e=>{ if(e.target===lightbox) closeLightbox(); });
+
+// ─────────────────────────────────────────
+//  KEYBOARD
+// ─────────────────────────────────────────
+document.addEventListener('keydown', e=>{
+  if (e.key==='Backspace' && document.activeElement!==searchEl && !lightbox.classList.contains('open')) {
+    e.preventDefault(); navigateUp(); return;
+  }
+  if (!lightbox.classList.contains('open')) return;
+  const p=displayItems.filter(i=>i.type==='file');
+  if (e.key==='Escape')     closeLightbox();
+  if (e.key==='ArrowLeft'  && lbIndex>0)         { e.preventDefault(); showLbPhoto(lbIndex-1); }
+  if (e.key==='ArrowRight' && lbIndex<p.length-1){ e.preventDefault(); showLbPhoto(lbIndex+1); }
+  if (e.key==='Home') { e.preventDefault(); showLbPhoto(0); }
+  if (e.key==='End')  { e.preventDefault(); showLbPhoto(p.length-1); }
+});
+
+// ─────────────────────────────────────────
+//  MEMORY MANAGEMENT
+// ─────────────────────────────────────────
+const MAX_CACHED=200;
+setInterval(()=>{
+  if(objectURLs.size<=MAX_CACHED) return;
+  const vIdx=Math.floor(scrollTop/rowH)*cols;
+  const entries=[...objectURLs.entries()];
+  entries.sort((a,b)=>Math.abs(a[0]-vIdx)-Math.abs(b[0]-vIdx));
+  for(let i=MAX_CACHED;i<entries.length;i++){ URL.revokeObjectURL(entries[i][1]); objectURLs.delete(entries[i][0]); }
+},8000);
+
+// ─────────────────────────────────────────
+//  UTILS
+// ─────────────────────────────────────────
+function tick() { return new Promise(r=>setTimeout(r,0)); }
+function countLabel(n) { return n+' item'+(n!==1?'s':''); }
+</script>
+</body>
+</html>
